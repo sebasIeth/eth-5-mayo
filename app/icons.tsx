@@ -168,6 +168,14 @@ export function Route(props: SVGProps<SVGSVGElement>) {
   );
 }
 
+export function HealthPlus(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" width={22} height={22} {...base(props)}>
+      <path d="M9 3h6v6h6v6h-6v6H9v-6H3V9h6V3Z" />
+    </svg>
+  );
+}
+
 /* Bandera de México para el input de teléfono */
 export function FlagMX(props: SVGProps<SVGSVGElement>) {
   return (

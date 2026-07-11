@@ -503,6 +503,15 @@ button:focus-visible {
 .problema__aside .section-title {
   color: var(--azul);
 }
+/* Tachón a mano en rojo sobre "Así se hace hoy." */
+.problema__aside .section-title .strike {
+  position: relative;
+  display: inline;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='30' viewBox='0 0 300 30' preserveAspectRatio='none'%3E%3Cpath d='M4 20 Q 75 8, 150 16 T 296 12' stroke='%23C8102E' stroke-width='5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center 56%;
+  background-size: 102% 0.62em;
+}
 .problema__aside p {
   color: var(--muted);
   margin-top: 18px;
@@ -793,6 +802,83 @@ button:focus-visible {
 .benefit__body p {
   color: var(--muted);
   font-size: 0.96rem;
+}
+
+/* ============================================================
+   DIRIGIDO A
+   ============================================================ */
+
+.audience {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  max-width: 880px;
+  margin-inline: auto;
+}
+.audience__group {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 32px 32px 28px;
+  box-shadow: var(--shadow-sm);
+  transition:
+    transform 0.3s var(--ease),
+    box-shadow 0.3s var(--ease);
+}
+.audience__group:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+}
+.audience__title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--azul);
+  font-size: 1.35rem;
+  padding-bottom: 18px;
+  margin-bottom: 18px;
+  border-bottom: 1px solid var(--border);
+}
+.audience__badge {
+  flex: 0 0 auto;
+  width: 42px;
+  height: 42px;
+  border-radius: 11px;
+  display: grid;
+  place-items: center;
+  color: var(--white);
+}
+.audience__badge--rojo {
+  background: var(--rojo);
+}
+.audience__badge--azul {
+  background: var(--azul);
+}
+.audience__list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.audience__list li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-weight: 500;
+  font-size: 1.05rem;
+  color: var(--navy);
+}
+.audience__list li svg {
+  flex: 0 0 auto;
+  color: var(--rojo);
+}
+
+@media (max-width: 640px) {
+  .audience {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* ============================================================

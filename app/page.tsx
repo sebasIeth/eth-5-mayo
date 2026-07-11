@@ -17,7 +17,23 @@ import {
   Star,
   Route,
   Shield,
+  HealthPlus,
 } from "./icons";
+
+const AUDIENCIA_SALUD = [
+  "Hospitales",
+  "Clínicas",
+  "Consultorios",
+  "Spas",
+  "Centros de relajación",
+];
+
+const AUDIENCIA_TURISMO = [
+  "Club de golf",
+  "Hoteles",
+  "Restaurantes",
+  "Agencias de viajes",
+];
 
 const PAINS = [
   "Visitas físicas costosas para cada verificación",
@@ -162,7 +178,7 @@ export default function Home() {
             <Reveal className="problema__aside">
               <span className="eyebrow eyebrow--rojo">El problema</span>
               <h2 className="section-title">
-                Así se hace hoy.
+                <span className="strike">Así se hace hoy.</span>
                 <br />
                 Así no debería ser.
               </h2>
@@ -272,6 +288,56 @@ export default function Home() {
                   </div>
                 </Reveal>
               ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ============ DIRIGIDO A ============ */}
+        <section className="section section--hielo" id="dirigido">
+          <div className="container">
+            <div className="section-head">
+              <span className="eyebrow">Dirigido a</span>
+              <h2 className="section-title">
+                ¿Tu establecimiento puede certificarse?
+              </h2>
+              <p className="section-lead">
+                El Sello de Turismo de Salud está diseñado para establecimientos
+                de salud y de hospitalidad que atienden al turista.
+              </p>
+            </div>
+
+            <div className="audience">
+              <Reveal as="article" className="audience__group">
+                <h3 className="audience__title">
+                  <span className="audience__badge audience__badge--rojo">
+                    <HealthPlus />
+                  </span>
+                  Salud
+                </h3>
+                <ul className="audience__list">
+                  {AUDIENCIA_SALUD.map((item) => (
+                    <li key={item}>
+                      <Check /> {item}
+                    </li>
+                  ))}
+                </ul>
+              </Reveal>
+
+              <Reveal as="article" className="audience__group" delay={110}>
+                <h3 className="audience__title">
+                  <span className="audience__badge audience__badge--azul">
+                    <Globe />
+                  </span>
+                  Turismo y hospitalidad
+                </h3>
+                <ul className="audience__list">
+                  {AUDIENCIA_TURISMO.map((item) => (
+                    <li key={item}>
+                      <Check /> {item}
+                    </li>
+                  ))}
+                </ul>
+              </Reveal>
             </div>
           </div>
         </section>
