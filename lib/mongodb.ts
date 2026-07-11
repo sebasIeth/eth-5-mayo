@@ -19,13 +19,23 @@ declare global {
 
 let clientPromise: Promise<MongoClient>;
 
+function connect(): Promise<MongoClient> {
+  // Si la conexión falla (p.ej. IP no permitida), NO cacheamos la promesa
+  // rechazada: la limpiamos para reintentar en la siguiente petición sin
+  // tener que reiniciar el servidor.
+  return new MongoClient(uri!).connect().catch((err) => {
+    global._mongoClientPromise = undefined;
+    throw err;
+  });
+}
+
 if (process.env.NODE_ENV === "development") {
   if (!global._mongoClientPromise) {
-    global._mongoClientPromise = new MongoClient(uri).connect();
+    global._mongoClientPromise = connect();
   }
   clientPromise = global._mongoClientPromise;
 } else {
-  clientPromise = new MongoClient(uri).connect();
+  clientPromise = connect();
 }
 
 export async function getDb(): Promise<Db> {
