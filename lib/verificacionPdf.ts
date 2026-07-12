@@ -208,10 +208,10 @@ export async function buildVerificacionPdf(data: Data): Promise<Uint8Array> {
   if (data.aprobada && fs.existsSync(FIRMA_CONSULTOR)) {
     try {
       const img = await pdf.embedPng(fs.readFileSync(FIRMA_CONSULTOR));
-      const s = Math.min(95 / img.width, 26 / img.height, 1);
+      const s = Math.min(120 / img.width, 38 / img.height, 1);
       p0.drawImage(img, {
-        x: 405,
-        y: Y(590),
+        x: 400,
+        y: Y(596),
         width: img.width * s,
         height: img.height * s,
       });
