@@ -15,7 +15,7 @@ export default async function LoginPage() {
   return (
     <div className="auth-page">
       <Link href="/" className="auth-logo" aria-label="Inicio">
-        <img src="/brand/turismo-salud.jpeg" alt="Turismo de Salud México" />
+        <img src="/brand/directiva.png" alt="Directiva" />
       </Link>
       <AuthForm />
       <Link href="/" className="auth-back">

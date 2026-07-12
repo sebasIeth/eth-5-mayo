@@ -66,7 +66,7 @@ export default async function VerificacionPage() {
       <header className="rg-top">
         <div className="rg-top__inner">
           <Link href="/dashboard" className="rg-back" aria-label="Ir al panel">
-            <img src="/brand/turismo-salud.jpeg" alt="Turismo de Salud México" />
+            <img src="/brand/directiva.png" alt="Directiva" />
           </Link>
           <PlatformUser nombre={user.nombre} />
         </div>

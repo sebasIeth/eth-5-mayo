@@ -25,6 +25,7 @@ export default async function UsuariosPage() {
     id: u._id.toString(),
     email: u.email as string,
     nombre: (u.nombre as string) ?? "",
+    codigo: (u.codigoAcceso as string) ?? "",
     creadoEn: u.creadoEn
       ? new Date(u.creadoEn).toLocaleDateString("es-MX")
       : "",
@@ -35,7 +36,7 @@ export default async function UsuariosPage() {
       <header className="rg-top">
         <div className="rg-top__inner">
           <Link href="/consultor" className="rg-back" aria-label="Panel del consultor">
-            <img src="/brand/turismo-salud.jpeg" alt="Turismo de Salud México" />
+            <img src="/brand/directiva.png" alt="Directiva" />
           </Link>
           <div className="cons-top-right">
             <span className="cons-tag">Consultor</span>

@@ -6,6 +6,7 @@ import {
   generateAccessCode,
   CONSULTOR_EMAILS,
 } from "@/lib/auth";
+import { enviarCorreo, correoAcceso } from "@/lib/email";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const str = (v: unknown) => (typeof v === "string" ? v.trim() : "");
@@ -26,9 +27,39 @@ export async function GET() {
     id: u._id.toString(),
     email: u.email as string,
     nombre: (u.nombre as string) ?? "",
+    codigo: (u.codigoAcceso as string) ?? "",
     creadoEn: u.creadoEn ? new Date(u.creadoEn).toISOString() : "",
   }));
   return Response.json({ ok: true, usuarios }, { status: 200 });
+}
+
+// Elimina un acceso (y su registro/verificación) por id.
+export async function DELETE(request: Request) {
+  const user = await getCurrentUser();
+  if (!user || user.rol !== "consultor") {
+    return Response.json({ ok: false, error: "No autorizado." }, { status: 403 });
+  }
+  const id = new URL(request.url).searchParams.get("id");
+  let _id: ObjectId;
+  try {
+    _id = new ObjectId(id ?? "");
+  } catch {
+    return Response.json({ ok: false, error: "Id inválido." }, { status: 400 });
+  }
+  const db = await getDb();
+  const target = await db.collection("usuarios").findOne({ _id });
+  if (!target) {
+    return Response.json({ ok: false, error: "No existe." }, { status: 404 });
+  }
+  if (CONSULTOR_EMAILS.includes(target.email)) {
+    return Response.json(
+      { ok: false, error: "No se puede eliminar un consultor." },
+      { status: 403 },
+    );
+  }
+  await db.collection("usuarios").deleteOne({ _id });
+  await db.collection("registros").deleteMany({ usuarioId: id });
+  return Response.json({ ok: true }, { status: 200 });
 }
 
 // Crea un acceso nuevo o regenera el código de uno existente.
@@ -77,10 +108,19 @@ export async function POST(request: Request) {
       }
       await users.updateOne(
         { _id: existente._id },
-        { $set: { passwordHash: hashPassword(codigo), codigoActualizadoEn: new Date() } },
+        {
+          $set: {
+            passwordHash: hashPassword(codigo),
+            codigoAcceso: codigo,
+            codigoActualizadoEn: new Date(),
+          },
+        },
       );
+      const nom = (existente.nombre as string) ?? "";
+      const c = correoAcceso(nom, email, codigo, true);
+      const enviado = await enviarCorreo({ to: email, subject: c.subject, html: c.html });
       return Response.json(
-        { ok: true, email, nombre: existente.nombre ?? "", codigo },
+        { ok: true, email, nombre: nom, codigo, correoEnviado: enviado },
         { status: 200 },
       );
     }
@@ -96,11 +136,21 @@ export async function POST(request: Request) {
       nombre: nombre || email,
       email,
       passwordHash: hashPassword(codigo),
+      codigoAcceso: codigo,
       creadoEn: new Date(),
       creadoPor: new ObjectId(user.id),
     });
+    const c = correoAcceso(nombre || "", email, codigo, false);
+    const enviado = await enviarCorreo({ to: email, subject: c.subject, html: c.html });
     return Response.json(
-      { ok: true, id: r.insertedId.toString(), email, nombre: nombre || email, codigo },
+      {
+        ok: true,
+        id: r.insertedId.toString(),
+        email,
+        nombre: nombre || email,
+        codigo,
+        correoEnviado: enviado,
+      },
       { status: 201 },
     );
   } catch (err) {

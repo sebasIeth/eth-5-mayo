@@ -2,8 +2,19 @@
 
 import { useState } from "react";
 
-type Usuario = { id: string; email: string; nombre: string; creadoEn: string };
-type Resultado = { email: string; nombre: string; codigo: string };
+type Usuario = {
+  id: string;
+  email: string;
+  nombre: string;
+  codigo: string;
+  creadoEn: string;
+};
+type Resultado = {
+  email: string;
+  nombre: string;
+  codigo: string;
+  correoEnviado?: boolean;
+};
 
 export default function UsuariosManager({ initial }: { initial: Usuario[] }) {
   const [usuarios, setUsuarios] = useState<Usuario[]>(initial);
@@ -13,6 +24,31 @@ export default function UsuariosManager({ initial }: { initial: Usuario[] }) {
   const [error, setError] = useState<string | null>(null);
   const [resultado, setResultado] = useState<Resultado | null>(null);
   const [copiado, setCopiado] = useState(false);
+  const [confirmar, setConfirmar] = useState<string | null>(null);
+  const [revelar, setRevelar] = useState<Record<string, boolean>>({});
+
+  async function eliminar(u: Usuario) {
+    setBusy(true);
+    setError(null);
+    setResultado(null);
+    try {
+      const res = await fetch(
+        `/api/consultor/usuarios?id=${encodeURIComponent(u.id)}`,
+        { method: "DELETE" },
+      );
+      const data = await res.json().catch(() => null);
+      if (!res.ok || !data?.ok) {
+        setError(data?.error || "No se pudo eliminar.");
+        return;
+      }
+      setUsuarios((list) => list.filter((x) => x.id !== u.id));
+      setConfirmar(null);
+    } catch {
+      setError("Sin conexión. Intenta de nuevo.");
+    } finally {
+      setBusy(false);
+    }
+  }
 
   async function enviar(accion: "crear" | "regenerar", correo: string, nom?: string) {
     setBusy(true);
@@ -29,14 +65,29 @@ export default function UsuariosManager({ initial }: { initial: Usuario[] }) {
         setError(data?.error || "No se pudo completar.");
         return;
       }
-      setResultado({ email: data.email, nombre: data.nombre, codigo: data.codigo });
+      setResultado({
+        email: data.email,
+        nombre: data.nombre,
+        codigo: data.codigo,
+        correoEnviado: data.correoEnviado,
+      });
       if (accion === "crear" && data.id) {
         setUsuarios((u) => [
-          { id: data.id, email: data.email, nombre: data.nombre, creadoEn: "hoy" },
+          {
+            id: data.id,
+            email: data.email,
+            nombre: data.nombre,
+            codigo: data.codigo,
+            creadoEn: "hoy",
+          },
           ...u,
         ]);
         setEmail("");
         setNombre("");
+      } else if (accion === "regenerar") {
+        setUsuarios((u) =>
+          u.map((x) => (x.email === data.email ? { ...x, codigo: data.codigo } : x)),
+        );
       }
     } catch {
       setError("Sin conexión. Intenta de nuevo.");
@@ -121,7 +172,10 @@ export default function UsuariosManager({ initial }: { initial: Usuario[] }) {
               {copiado ? "¡Copiado!" : "Copiar"}
             </button>
             <p className="usr-result__note">
-              El código solo se muestra ahora. Si se pierde, regeneras uno nuevo.
+              {resultado.correoEnviado
+                ? "✓ Se envió el código por correo automáticamente."
+                : "El correo automático no está activo: comparte estos datos manualmente."}{" "}
+              También puedes verlo después con el botón “Ver”.
             </p>
           </div>
         )}
@@ -141,15 +195,82 @@ export default function UsuariosManager({ initial }: { initial: Usuario[] }) {
                 <div>
                   <strong>{u.nombre || u.email}</strong>
                   <span className="usr-item__email">{u.email}</span>
+                  <span className="usr-item__codigo">
+                    Código:{" "}
+                    {u.codigo ? (
+                      <>
+                        <code>{revelar[u.id] ? u.codigo : "••••••••"}</code>
+                        <button
+                          type="button"
+                          className="usr-link"
+                          onClick={() =>
+                            setRevelar((r) => ({ ...r, [u.id]: !r[u.id] }))
+                          }
+                        >
+                          {revelar[u.id] ? "Ocultar" : "Ver"}
+                        </button>
+                        {revelar[u.id] && (
+                          <button
+                            type="button"
+                            className="usr-link"
+                            onClick={() =>
+                              navigator.clipboard?.writeText(u.codigo).catch(() => {})
+                            }
+                          >
+                            Copiar
+                          </button>
+                        )}
+                      </>
+                    ) : (
+                      <em className="usr-item__sincodigo">
+                        creado antes — regenera para verlo
+                      </em>
+                    )}
+                  </span>
                 </div>
-                <button
-                  type="button"
-                  className="dash-btn"
-                  disabled={busy}
-                  onClick={() => enviar("regenerar", u.email)}
-                >
-                  Regenerar código
-                </button>
+                {confirmar === u.id ? (
+                  <div className="usr-item__acciones">
+                    <span className="usr-item__warn">¿Eliminar acceso?</span>
+                    <button
+                      type="button"
+                      className="dash-btn dash-btn--rojo"
+                      disabled={busy}
+                      onClick={() => eliminar(u)}
+                    >
+                      Sí, eliminar
+                    </button>
+                    <button
+                      type="button"
+                      className="dash-btn"
+                      disabled={busy}
+                      onClick={() => setConfirmar(null)}
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                ) : (
+                  <div className="usr-item__acciones">
+                    <button
+                      type="button"
+                      className="dash-btn"
+                      disabled={busy}
+                      onClick={() => enviar("regenerar", u.email)}
+                    >
+                      Regenerar código
+                    </button>
+                    <button
+                      type="button"
+                      className="usr-del"
+                      disabled={busy}
+                      onClick={() => {
+                        setConfirmar(u.id);
+                        setError(null);
+                      }}
+                    >
+                      Eliminar
+                    </button>
+                  </div>
+                )}
               </li>
             ))}
           </ul>

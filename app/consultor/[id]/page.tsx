@@ -95,7 +95,7 @@ export default async function RevisarPage({
       <header className="rg-top">
         <div className="rg-top__inner">
           <Link href="/consultor" className="rg-back" aria-label="Panel del consultor">
-            <img src="/brand/turismo-salud.jpeg" alt="Turismo de Salud México" />
+            <img src="/brand/directiva.png" alt="Directiva" />
           </Link>
           <div className="cons-top-right">
             <span className="cons-tag">Consultor</span>

@@ -1,4 +1,7 @@
+import { existsSync } from "fs";
+import { join } from "path";
 import Nav from "./components/Nav";
+import AvalLogo from "./components/AvalLogo";
 import Reveal from "./components/Reveal";
 import ProgressRing from "./components/ProgressRing";
 import PreRegisterForm from "./components/PreRegisterForm";
@@ -119,6 +122,9 @@ const BENEFITS = [
 ];
 
 export default function Home() {
+  // Solo mostramos la franja "Avalado por" si el logo existe en disco,
+  // para no renderizar una imagen rota mientras no se sube el archivo.
+  const hasSectur = existsSync(join(process.cwd(), "public/brand/sectur.png"));
   return (
     <div id="top">
       <Nav />
@@ -171,6 +177,9 @@ export default function Home() {
             </Reveal>
           </div>
         </section>
+
+        {/* ============ AVAL ============ */}
+        {hasSectur && <AvalLogo />}
 
         {/* ============ PROBLEMA ============ */}
         <section className="section section--hielo">
