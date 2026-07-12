@@ -19,6 +19,7 @@ import {
   preguntasAplicables,
   familiasAplicables,
 } from "./aplicabilidad";
+import { CRITERIOS } from "./criterios";
 import type { VerifRevisiones } from "./revision";
 
 const OPCIONES: { r: Respuesta; label: string; cls: string }[] = [
@@ -652,6 +653,17 @@ export default function VerificacionForm({
                       </span>
                       <span className="vf-text">{p.texto}</span>
                     </div>
+
+                    {CRITERIOS[p.codigo] && (
+                      <details className="vf-crit">
+                        <summary>Criterio de evaluación · evidencias que debes presentar</summary>
+                        <ul>
+                          {CRITERIOS[p.codigo].map((c, ci) => (
+                            <li key={ci}>{c}</li>
+                          ))}
+                        </ul>
+                      </details>
+                    )}
 
                     <div
                       className="vf-seg"

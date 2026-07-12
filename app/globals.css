@@ -3373,8 +3373,46 @@ button:focus-visible {
   background: var(--hielo);
 }
 
-/* Plan de acción (cuando "No cumple") */
-.vf-plan {
+/* Criterio de evaluación (evidencias requeridas) por pregunta */
+.vf-crit {
+  margin: 8px 0 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--hielo);
+  overflow: hidden;
+}
+.vf-crit > summary {
+  cursor: pointer;
+  list-style: none;
+  padding: 9px 12px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--azul);
+  user-select: none;
+}
+.vf-crit > summary::-webkit-details-marker {
+  display: none;
+}
+.vf-crit > summary::before {
+  content: "▸ ";
+  color: var(--muted);
+}
+.vf-crit[open] > summary::before {
+  content: "▾ ";
+}
+.vf-crit > ul {
+  margin: 0;
+  padding: 0 14px 12px 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.vf-crit > ul > li {
+  font-size: 0.86rem;
+  color: var(--navy);
+  line-height: 1.35;
+  list-style: decimal;
+}
   margin-top: 10px;
   padding: 12px 14px;
   border: 1px solid var(--border);
