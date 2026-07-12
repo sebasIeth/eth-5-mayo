@@ -74,25 +74,21 @@ export default function VerificacionRevisionForm({
   async function enviar() {
     setError(null);
 
-    // Validación: cada pregunta contestada debe tener decisión y las
-    // correcciones requieren comentario.
+    // No es obligatorio revisar todas: se envían solo las que el consultor ya
+    // marcó (las correcciones requieren motivo). Basta con al menos una.
+    const payload: VerifRevisiones = {};
     for (const p of contestadas) {
       const r = rev[p.codigo];
-      if (!r || (r.estado !== "aprobado" && r.estado !== "correccion")) {
-        setError(`Falta revisar la pregunta ${p.codigo}.`);
-        return;
-      }
+      if (!r) continue; // sin revisar aún → se omite; se puede revisar después
       if (r.estado === "correccion" && !r.comentario.trim()) {
         setError(`Escribe el motivo de la corrección en la pregunta ${p.codigo}.`);
         return;
       }
+      payload[p.codigo] = r;
     }
-
-    // Solo enviamos las revisiones de preguntas contestadas.
-    const payload: VerifRevisiones = {};
-    for (const p of contestadas) {
-      const r = rev[p.codigo];
-      if (r) payload[p.codigo] = r;
+    if (Object.keys(payload).length === 0) {
+      setError("Marca al menos una pregunta como aprobada o con corrección.");
+      return;
     }
 
     setSubmitting(true);
