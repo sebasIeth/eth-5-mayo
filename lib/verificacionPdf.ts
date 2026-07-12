@@ -264,7 +264,9 @@ export async function buildVerificacionPdf(data: Data): Promise<Uint8Array> {
         continue;
       }
 
-      if (v?.r === "si") put(page, "X", COL.si - 3, y + 11, 10, bold);
+      // "Sí Cumple": los puntos que vale el indicador (P=2, C=1) en vez de X.
+      if (v?.r === "si")
+        put(page, q.tipo === "P" ? "2" : "1", COL.si - 3, y + 11, 10, bold);
       else if (v?.r === "no") put(page, "X", COL.no - 3, y + 11, 10, bold);
 
       // La descripción del usuario va en "Evidencias de Cumplimiento" SOLO si la

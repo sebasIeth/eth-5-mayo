@@ -114,7 +114,8 @@ export async function buildVerificacionDocx(data: Data): Promise<Buffer> {
 
       values[`na_${c}`] = "";
       values[`no_${c}`] = v?.r === "no" ? "X" : "";
-      values[`si_${c}`] = v?.r === "si" ? "X" : "";
+      // "Sí Cumple": los puntos que vale (P=2, C=1) en vez de X.
+      values[`si_${c}`] = v?.r === "si" ? (q.tipo === "P" ? "2" : "1") : "";
       // Cuando aplica, Observaciones queda vacío.
       values[`obs_${c}`] = "";
       // La descripción del usuario va en Evidencias SOLO si "Sí cumple".
