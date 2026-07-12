@@ -3413,6 +3413,9 @@ button:focus-visible {
   line-height: 1.35;
   list-style: decimal;
 }
+
+/* Plan de acción (cuando "No cumple") */
+.vf-plan {
   margin-top: 10px;
   padding: 12px 14px;
   border: 1px solid var(--border);
