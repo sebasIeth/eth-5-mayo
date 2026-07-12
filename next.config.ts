@@ -12,6 +12,9 @@ const nextConfig: NextConfig = {
     "/api/verificacion/docx": ["./templates/**"],
     "/api/plan3w/pdf": ["./templates/**"],
     "/api/plan3w/xlsx": ["./templates/**"],
+    "/api/carta-intencion/pdf": ["./templates/**"],
+    "/api/carta-adhesion/pdf": ["./templates/**"],
+    "/api/calculadora/xlsx": ["./templates/**"],
   },
 };
 

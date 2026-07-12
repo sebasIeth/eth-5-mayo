@@ -279,6 +279,48 @@ export default async function RevisarPage({
             </ul>
           </DocBlock>
         )}
+
+        {/* ================= Cartas (MSE-FO-29 / MSE-FO-32) ================= */}
+        <DocBlock code="MSE-FO-29" title="Carta de Intención">
+          {doc.cartas?.intencion ? (
+            <a
+              className="dash-btn dash-btn--rojo"
+              href={`/api/carta-intencion/pdf?id=${id}`}
+            >
+              Descargar PDF
+            </a>
+          ) : (
+            <p className="dash-sub">El establecimiento aún no llena esta carta.</p>
+          )}
+        </DocBlock>
+
+        <DocBlock code="MSE-FO-32" title="Carta de Adhesión">
+          {doc.cartas?.adhesion ? (
+            <a
+              className="dash-btn dash-btn--rojo"
+              href={`/api/carta-adhesion/pdf?id=${id}`}
+            >
+              Descargar PDF
+            </a>
+          ) : (
+            <p className="dash-sub">El establecimiento aún no llena esta carta.</p>
+          )}
+        </DocBlock>
+
+        {/* ============ Calculadora de Sello (MSE-FO-59) — solo consultor ===== */}
+        <DocBlock code="MSE-FO-59" title="Calculadora de Sello">
+          <p className="dash-sub">
+            Reporte de evaluación con las respuestas de la verificación. Al abrir
+            el Excel, la hoja “Reporte de Evaluación” recalcula sola (porcentaje,
+            acreditación y desglose por familia).
+          </p>
+          <a
+            className="dash-btn dash-btn--rojo"
+            href={`/api/calculadora/xlsx?id=${id}`}
+          >
+            Descargar Excel
+          </a>
+        </DocBlock>
       </main>
 
       <footer className="rg-foot">

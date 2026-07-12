@@ -36,6 +36,126 @@ export async function enviarCorreo({ to, subject, html }: EnviarArgs): Promise<b
 const ROJO = "#C8102E";
 const AZUL = "#003DA5";
 
+// URL pública de la plataforma (para los botones de los correos). Configúrala
+// en Vercel con el dominio del deploy, ej. https://sello.vercel.app
+const APP_URL = (process.env.APP_URL || "").replace(/\/$/, "");
+const link = (path: string) => (APP_URL ? APP_URL + path : "");
+
+// Plantilla base reutilizable para los correos de notificación.
+function layout(opts: {
+  titulo: string;
+  saludo?: string;
+  parrafos: string[];
+  cta?: { label: string; href: string };
+}) {
+  const { titulo, saludo, parrafos, cta } = opts;
+  const cuerpo = parrafos
+    .map(
+      (p) =>
+        `<p style="font-size:15px;line-height:1.55;margin:0 0 14px">${p}</p>`,
+    )
+    .join("");
+  const boton =
+    cta && cta.href
+      ? `<a href="${cta.href}" style="display:inline-block;background:${ROJO};color:#fff;text-decoration:none;font-weight:bold;font-size:15px;padding:12px 22px;border-radius:10px;margin:6px 0 4px">${cta.label}</a>`
+      : "";
+  return `
+  <div style="font-family:Arial,Helvetica,sans-serif;max-width:520px;margin:0 auto;color:#1a2233">
+    <div style="border-top:4px solid ${ROJO};border-radius:2px"></div>
+    <h1 style="color:${AZUL};font-size:20px;margin:22px 0 12px">${titulo}</h1>
+    ${saludo ? `<p style="font-size:15px;line-height:1.55;margin:0 0 14px">${saludo}</p>` : ""}
+    ${cuerpo}
+    ${boton}
+    <p style="font-size:12px;color:#8a93a3;margin:24px 0 0">Sello de Turismo de Salud · Segmentos Especializados · Secretaría de Turismo de México</p>
+  </div>`;
+}
+
+// —— Al consultor: un establecimiento inició su solicitud ——
+export function correoSolicitudIniciada(establecimiento: string) {
+  return {
+    subject: `Nueva solicitud iniciada · ${establecimiento}`,
+    html: layout({
+      titulo: "Nueva solicitud iniciada",
+      parrafos: [
+        `El establecimiento <strong>${establecimiento}</strong> comenzó su solicitud del Sello de Turismo de Salud.`,
+        "Aún no la envía a revisión; te avisaremos cuando esté lista.",
+      ],
+      cta: { label: "Ir al panel", href: link("/consultor") },
+    }),
+  };
+}
+
+// —— Al consultor: un establecimiento envió algo para revisión ——
+export function correoEnvioParaRevision(
+  establecimiento: string,
+  tipo: "registro" | "verificación",
+) {
+  return {
+    subject: `Pendiente de revisión: ${tipo} · ${establecimiento}`,
+    html: layout({
+      titulo: "Tienes algo por revisar",
+      parrafos: [
+        `El establecimiento <strong>${establecimiento}</strong> envió su <strong>${tipo}</strong> para revisión.`,
+        "Ingresa al panel para revisarlo, aprobarlo o solicitar correcciones.",
+      ],
+      cta: { label: "Revisar ahora", href: link("/consultor") },
+    }),
+  };
+}
+
+// —— Al establecimiento: confirmación de que recibimos su envío ——
+export function correoConfirmacionEnvio(
+  nombre: string,
+  tipo: "registro" | "verificación",
+) {
+  return {
+    subject: `Recibimos tu ${tipo} · Sello de Turismo de Salud`,
+    html: layout({
+      titulo: `Recibimos tu ${tipo}`,
+      saludo: nombre ? `Hola ${nombre},` : "Hola,",
+      parrafos: [
+        `Tu <strong>${tipo}</strong> se envió correctamente y está <strong>pendiente de revisión</strong> por el consultor.`,
+        "Te avisaremos por este medio cuando haya novedades.",
+      ],
+      cta: { label: "Ver mi panel", href: link("/dashboard") },
+    }),
+  };
+}
+
+// —— Al establecimiento: el consultor terminó una revisión ——
+export function correoResultadoRevision(
+  nombre: string,
+  tipo: "registro" | "verificación",
+  aprobado: boolean,
+) {
+  if (aprobado) {
+    return {
+      subject: `Tu ${tipo} fue aprobado · Sello de Turismo de Salud`,
+      html: layout({
+        titulo: `¡Tu ${tipo} fue aprobado!`,
+        saludo: nombre ? `Hola ${nombre},` : "Hola,",
+        parrafos: [
+          `El consultor revisó y <strong>aprobó</strong> tu ${tipo}. ¡Buen trabajo!`,
+          "Ingresa a tu panel para ver el detalle y los siguientes pasos.",
+        ],
+        cta: { label: "Ver mi panel", href: link("/dashboard") },
+      }),
+    };
+  }
+  return {
+    subject: `Revisión de tu ${tipo}: hay correcciones · Sello de Turismo de Salud`,
+    html: layout({
+      titulo: `Revisamos tu ${tipo}`,
+      saludo: nombre ? `Hola ${nombre},` : "Hola,",
+      parrafos: [
+        `El consultor revisó tu ${tipo} y dejó <strong>observaciones o correcciones</strong> en algunos puntos.`,
+        "Entra a tu panel, revisa los comentarios, corrige lo indicado y vuelve a enviar.",
+      ],
+      cta: { label: "Ver correcciones", href: link("/dashboard") },
+    }),
+  };
+}
+
 // Plantilla del correo con el código de acceso.
 export function correoAcceso(nombre: string, email: string, codigo: string, regenerado = false) {
   const saludo = nombre ? `Hola ${nombre},` : "Hola,";

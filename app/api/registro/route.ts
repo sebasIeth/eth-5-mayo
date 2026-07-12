@@ -1,5 +1,11 @@
 import { getDb } from "@/lib/mongodb";
-import { getCurrentUser } from "@/lib/auth";
+import { getCurrentUser, CONSULTOR_EMAILS } from "@/lib/auth";
+import {
+  enviarCorreo,
+  correoSolicitudIniciada,
+  correoEnvioParaRevision,
+  correoConfirmacionEnvio,
+} from "@/lib/email";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -103,7 +109,7 @@ export async function POST(request: Request) {
       setOnInsert.estatus = "borrador";
     }
 
-    await db
+    const result = await db
       .collection("registros")
       .updateOne(
         { usuarioId: user.id },
@@ -114,6 +120,23 @@ export async function POST(request: Request) {
     const saved = await db
       .collection("registros")
       .findOne({ usuarioId: user.id }, { projection: { _id: 1, estatus: 1 } });
+
+    // ——— Notificaciones por correo (best-effort) ———
+    const estName = str(empresa.razonSocial) || user.nombre;
+    const consultorEmail = CONSULTOR_EMAILS[0];
+    if (accion === "enviar") {
+      // Al consultor: hay algo por revisar.
+      const c1 = correoEnvioParaRevision(estName, "registro");
+      await enviarCorreo({ to: consultorEmail, subject: c1.subject, html: c1.html });
+      // Al establecimiento: confirmación de recepción.
+      const dest = str(empresa.email) || user.email;
+      const c2 = correoConfirmacionEnvio(user.nombre, "registro");
+      await enviarCorreo({ to: dest, subject: c2.subject, html: c2.html });
+    } else if (result.upsertedCount > 0) {
+      // Primera vez que se guarda: el establecimiento inició su solicitud.
+      const c = correoSolicitudIniciada(estName);
+      await enviarCorreo({ to: consultorEmail, subject: c.subject, html: c.html });
+    }
 
     return Response.json(
       { ok: true, id: saved?._id?.toString(), estatus: saved?.estatus, accion },

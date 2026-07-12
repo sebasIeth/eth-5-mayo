@@ -1,5 +1,10 @@
 import { getDb } from "@/lib/mongodb";
-import { getCurrentUser } from "@/lib/auth";
+import { getCurrentUser, CONSULTOR_EMAILS } from "@/lib/auth";
+import {
+  enviarCorreo,
+  correoEnvioParaRevision,
+  correoConfirmacionEnvio,
+} from "@/lib/email";
 import {
   FAMILIAS,
   TODAS_PREGUNTAS,
@@ -249,6 +254,22 @@ export async function POST(request: Request) {
         { $set: setData, $setOnInsert: setOnInsert },
         { upsert: true },
       );
+
+    // ——— Notificaciones por correo (best-effort) al enviar a revisión ———
+    if (accion === "enviar") {
+      const estName =
+        (existente?.empresa?.razonSocial as string | undefined) || user.nombre;
+      const c1 = correoEnvioParaRevision(estName, "verificación");
+      await enviarCorreo({
+        to: CONSULTOR_EMAILS[0],
+        subject: c1.subject,
+        html: c1.html,
+      });
+      const dest =
+        (existente?.empresa?.email as string | undefined) || user.email;
+      const c2 = correoConfirmacionEnvio(user.nombre, "verificación");
+      await enviarCorreo({ to: dest, subject: c2.subject, html: c2.html });
+    }
 
     return Response.json(
       { ok: true, accion, pct: calc.pct, aprobado: calc.aprobado },

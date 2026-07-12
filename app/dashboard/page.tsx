@@ -276,6 +276,27 @@ export default async function DashboardPage() {
                   </div>
                 </div>
 
+                {/* ===== Cartas del Sello (MSE-FO-29 / MSE-FO-32) ===== */}
+                <div className="dash-item">
+                  <div className="dash-item__body">
+                    <h3>Cartas del Sello</h3>
+                    <span className="dash-item__doc">
+                      Carta de Intención · MSE-FO-29 · Carta de Adhesión · MSE-FO-32
+                    </span>
+                    <div className="dash-item__meta">
+                      <span>Se descargan en el formato oficial (PDF)</span>
+                      <span>Usan la firma de tu registro</span>
+                    </div>
+                  </div>
+                  <div className="dash-item__side">
+                    <div className="dash-item__actions">
+                      <Link href="/cartas" className="dash-btn dash-btn--rojo">
+                        Llenar cartas
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+
                 {/* ===== Planes 3W (1 por familia con "No cumple") ===== */}
                 {r.verif.planes3w.length > 0 && (
                   <div className="dash-3w">

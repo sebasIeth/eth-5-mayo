@@ -2,6 +2,7 @@ import { ObjectId } from "mongodb";
 import { getCurrentUser } from "@/lib/auth";
 import { getDb } from "@/lib/mongodb";
 import { parseRevisiones, recomputeEstatus } from "@/app/registro/revision";
+import { enviarCorreo, correoResultadoRevision } from "@/lib/email";
 
 export async function POST(request: Request) {
   const user = await getCurrentUser();
@@ -68,6 +69,25 @@ export async function POST(request: Request) {
         },
       },
     );
+
+    // ——— Avisar al establecimiento del resultado (aprobado / correcciones) ———
+    if (estatus === "completado" || estatus === "en_espera_documentos") {
+      const dest =
+        (doc.empresa?.email as string | undefined) ||
+        (doc.usuarioEmail as string | undefined);
+      if (dest) {
+        const nombre =
+          (doc.usuarioNombre as string | undefined) ||
+          (doc.empresa?.razonSocial as string | undefined) ||
+          "";
+        const c = correoResultadoRevision(
+          nombre,
+          "registro",
+          estatus === "completado",
+        );
+        await enviarCorreo({ to: dest, subject: c.subject, html: c.html });
+      }
+    }
 
     return Response.json({ ok: true, estatus }, { status: 200 });
   } catch (err) {

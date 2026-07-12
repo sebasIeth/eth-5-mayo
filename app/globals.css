@@ -2370,6 +2370,62 @@ button:focus-visible {
   font-size: 0.85rem;
   color: var(--muted);
 }
+.dash-head__actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* ===== Cartas (MSE-FO-29 / MSE-FO-32) ===== */
+.cartas {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.cartas-warn {
+  background: #fff7ed;
+  border: 1px solid #fdba74;
+  color: #9a3412;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 0.9rem;
+}
+.cartas-warn a {
+  color: var(--rojo);
+  font-weight: 600;
+}
+.cartas-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+}
+.cartas-col2 {
+  grid-column: 1 / -1;
+}
+.cartas-sub {
+  font-size: 1rem;
+  color: var(--navy);
+  margin: 20px 0 10px;
+}
+.cartas-acciones {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 18px;
+}
+.cartas-msg {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--azul);
+}
+@media (max-width: 640px) {
+  .cartas-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* ===== Páginas legales ===== */
 .legal {
   max-width: 760px;
