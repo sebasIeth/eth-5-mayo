@@ -58,6 +58,7 @@ const VERIF_ESTATUS: Record<string, { label: string; cls: string }> = {
 export default async function DashboardPage() {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
+  if (user.rol === "empresa" && !user.aceptoLegal) redirect("/consentimiento");
   // Un consultor no usa el panel de empresa: va a su panel.
   if (user.rol === "consultor") redirect("/consultor");
 

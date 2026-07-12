@@ -1165,6 +1165,20 @@ button:focus-visible {
   width: auto;
   display: block;
 }
+.footer__cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 22px;
+}
+.footer__cards .footer__project {
+  margin-top: 0;
+}
+.footer__sectur {
+  height: 48px;
+  width: auto;
+  display: block;
+}
 .footer__links {
   display: flex;
   gap: 30px;
@@ -2356,30 +2370,186 @@ button:focus-visible {
   font-size: 0.85rem;
   color: var(--muted);
 }
-.aval {
-  padding: 26px 0;
-  border-bottom: 1px solid var(--border);
-  background: #fff;
+/* ===== Páginas legales ===== */
+.legal {
+  max-width: 760px;
+  margin: 0 auto;
 }
-.aval__inner {
+.legal__title {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  color: var(--navy);
+  margin: 6px 0 4px;
+}
+.legal__meta {
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin: 0 0 4px;
+}
+.legal__intro {
+  color: var(--muted);
+  margin: 0 0 18px;
+}
+.legal__nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 28px;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  padding: 12px 0;
+}
+.legal__navlink {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--azul);
+  text-decoration: none;
+  padding: 4px 10px;
+  border-radius: 999px;
+}
+.legal__navlink.is-active {
+  background: var(--hielo);
+  color: var(--navy);
+}
+.legal__body {
+  color: var(--navy);
+  line-height: 1.65;
+}
+.legal__body h2 {
+  font-family: var(--font-display);
+  font-size: 1.18rem;
+  color: var(--navy);
+  margin: 26px 0 8px;
+}
+.legal__body p {
+  margin: 0 0 12px;
+}
+.legal__body ul {
+  margin: 0 0 12px;
+  padding-left: 20px;
+}
+.legal__body li {
+  margin: 0 0 7px;
+}
+.legal__body a {
+  color: var(--azul);
+  font-weight: 600;
+}
+
+/* ===== Consentimiento (primer inicio de sesión) ===== */
+.consent-page {
+  min-height: 100dvh;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 22px;
-  flex-wrap: wrap;
+  padding: 32px 18px;
+  background: var(--hielo);
 }
-.aval__label {
-  font-size: 0.78rem;
-  font-weight: 600;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--muted);
+.consent-card {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 34px 30px;
+  max-width: 520px;
+  width: 100%;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.06);
 }
-.aval__logo {
-  height: 60px;
+.consent-logo {
+  height: 52px;
   width: auto;
   display: block;
+  margin: 0 0 14px;
 }
+.consent-title {
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  color: var(--navy);
+  margin: 4px 0 8px;
+}
+.consent-lead {
+  color: var(--muted);
+  line-height: 1.55;
+  margin: 0 0 6px;
+}
+.consent-meta {
+  font-size: 0.82rem;
+  color: var(--muted);
+  margin: 0 0 18px;
+}
+.consent-docs {
+  list-style: none;
+  margin: 0 0 18px;
+  padding: 14px 16px;
+  background: var(--hielo);
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.consent-docs a {
+  color: var(--azul);
+  font-weight: 600;
+  text-decoration: none;
+}
+.consent-docs a:hover {
+  text-decoration: underline;
+}
+.consent-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 0 0 18px;
+  line-height: 1.5;
+  cursor: pointer;
+}
+.consent-check input {
+  margin-top: 3px;
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+  accent-color: var(--rojo);
+}
+.consent-submit {
+  width: 100%;
+}
+.consent-cancel {
+  display: block;
+  width: 100%;
+  text-align: center;
+  margin-top: 14px;
+  background: none;
+  border: none;
+  font: inherit;
+  color: var(--muted);
+  cursor: pointer;
+}
+.consent-cancel:hover {
+  color: var(--navy);
+  text-decoration: underline;
+}
+
+/* Enlaces legales bajo el login */
+.legal-links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 16px;
+  font-size: 0.82rem;
+}
+.legal-links a {
+  color: var(--muted);
+  text-decoration: none;
+}
+.legal-links a:hover {
+  color: var(--navy);
+  text-decoration: underline;
+}
+.legal-links span {
+  color: var(--border);
+}
+
 .usr-item__acciones {
   display: flex;
   align-items: center;

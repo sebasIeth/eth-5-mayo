@@ -15,6 +15,7 @@ export const metadata: Metadata = {
 export default async function RegistroPage() {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
+  if (user.rol === "empresa" && !user.aceptoLegal) redirect("/consentimiento");
 
   const db = await getDb();
   const doc = await db.collection("registros").findOne({ usuarioId: user.id });

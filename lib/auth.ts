@@ -2,6 +2,7 @@ import crypto from "node:crypto";
 import { cookies } from "next/headers";
 import { ObjectId } from "mongodb";
 import { getDb } from "./mongodb";
+import { LEGAL_VERSION } from "./legal";
 
 const SECRET = process.env.AUTH_SECRET;
 if (!SECRET) throw new Error("Falta AUTH_SECRET en .env.local");
@@ -112,6 +113,8 @@ export type SessionUser = {
   nombre: string;
   email: string;
   rol: "consultor" | "empresa";
+  // true si el usuario ya aceptó la versión vigente de los documentos legales.
+  aceptoLegal: boolean;
 };
 
 export async function getCurrentUser(): Promise<SessionUser | null> {
@@ -128,5 +131,6 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
   if (!user) return null;
   const email: string = user.email;
   const rol = CONSULTOR_EMAILS.includes(email) ? "consultor" : "empresa";
-  return { id: user._id.toString(), nombre: user.nombre, email, rol };
+  const aceptoLegal = user.aceptoLegalVersion === LEGAL_VERSION;
+  return { id: user._id.toString(), nombre: user.nombre, email, rol, aceptoLegal };
 }

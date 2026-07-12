@@ -21,6 +21,13 @@ export default async function LoginPage() {
       <Link href="/" className="auth-back">
         ← Volver al inicio
       </Link>
+      <nav className="legal-links" aria-label="Documentos legales">
+        <Link href="/legal/terminos">Términos y Condiciones</Link>
+        <span aria-hidden="true">·</span>
+        <Link href="/legal/privacidad">Aviso de Privacidad</Link>
+        <span aria-hidden="true">·</span>
+        <Link href="/legal/propiedad-intelectual">Propiedad Intelectual</Link>
+      </nav>
     </div>
   );
 }

@@ -1,7 +1,6 @@
 import { existsSync } from "fs";
 import { join } from "path";
 import Nav from "./components/Nav";
-import AvalLogo from "./components/AvalLogo";
 import Reveal from "./components/Reveal";
 import ProgressRing from "./components/ProgressRing";
 import PreRegisterForm from "./components/PreRegisterForm";
@@ -177,9 +176,6 @@ export default function Home() {
             </Reveal>
           </div>
         </section>
-
-        {/* ============ AVAL ============ */}
-        {hasSectur && <AvalLogo />}
 
         {/* ============ PROBLEMA ============ */}
         <section className="section section--hielo">
@@ -383,20 +379,33 @@ export default function Home() {
               <p className="footer__tagline">
                 Digitalización del Sello de Turismo de Salud · México
               </p>
-              <div className="footer__project">
-                <span>Un proyecto de</span>
-                <img
-                  className="footer__directiva"
-                  src="/brand/directiva.png"
-                  alt="DIRECTIVA · Desarrollo de negocios"
-                  width={1240}
-                  height={1600}
-                />
+              <div className="footer__cards">
+                <div className="footer__project">
+                  <span>Un proyecto de</span>
+                  <img
+                    className="footer__directiva"
+                    src="/brand/directiva.png"
+                    alt="DIRECTIVA · Desarrollo de negocios"
+                    width={1240}
+                    height={1600}
+                  />
+                </div>
+                {hasSectur && (
+                  <div className="footer__project">
+                    <span>Avalado por</span>
+                    <img
+                      className="footer__sectur"
+                      src="/brand/sectur.png"
+                      alt="Secretaría de Turismo · Gobierno de México"
+                    />
+                  </div>
+                )}
               </div>
             </div>
             <nav className="footer__links" aria-label="Enlaces del pie">
-              <a href="#">Privacidad</a>
-              <a href="#">Términos</a>
+              <a href="/legal/privacidad">Aviso de Privacidad</a>
+              <a href="/legal/terminos">Términos y Condiciones</a>
+              <a href="/legal/propiedad-intelectual">Propiedad Intelectual</a>
               <a href="#contacto">Contacto</a>
             </nav>
           </div>

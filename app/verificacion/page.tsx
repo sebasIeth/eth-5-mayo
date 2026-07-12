@@ -25,6 +25,7 @@ export default async function VerificacionPage() {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
   if (user.rol === "consultor") redirect("/consultor");
+  if (!user.aceptoLegal) redirect("/consentimiento");
 
   const db = await getDb();
   const doc = await db.collection("registros").findOne({ usuarioId: user.id });
