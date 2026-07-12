@@ -5,6 +5,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { getDb } from "@/lib/mongodb";
 import { computeProgress } from "../registro/progress";
 import { calcVerificacion, type RespuestasVerif } from "../verificacion/data";
+import { preguntasAplicables } from "../verificacion/aplicabilidad";
 import PlatformUser from "../components/PlatformUser";
 import ConsultorTabs from "./ConsultorTabs";
 
@@ -37,15 +38,60 @@ export default async function ConsultorPage() {
       ).length;
       const verifResp = (r.verificacion?.respuestas ?? {}) as RespuestasVerif;
       const verifCalc = calcVerificacion(verifResp);
+
+      // ===== Estatus COMBINADO (registro + revisión de la verificación) =====
+      // "Pendiente de revisión" mientras el consultor NO termine de revisar: la
+      // verificación sólo cuenta como revisada cuando TODAS sus preguntas
+      // contestadas aplicables tienen veredicto. Ya con la revisión completa:
+      // alguna corrección → "En espera de documentos"; todo aprobado → listo.
+      const regEstatus = r.estatus as string;
+      const verifEstatus = r.verificacion?.estatus as string | undefined;
+      const verifRevs = (r.verificacion?.revisiones ?? {}) as Record<
+        string,
+        { estado?: string }
+      >;
+      const giro = r.registro?.giro ?? null;
+      const aplicables = preguntasAplicables(giro, {
+        tieneRestaurante: r.verificacion?.tieneRestaurante === true,
+      });
+      const contestadasAplic = aplicables.filter((p) => {
+        const rr = verifResp[p.codigo]?.r;
+        return rr === "si" || rr === "no";
+      });
+      const revisionCompleta =
+        contestadasAplic.length > 0 &&
+        contestadasAplic.every((p) => verifRevs[p.codigo]);
+      const hayCorreccionVerif = Object.values(verifRevs).some(
+        (v) => v.estado === "correccion",
+      );
+
+      const fase = (e: string | undefined): "pend" | "espera" | "ok" =>
+        e === "completado"
+          ? "ok"
+          : e === "en_espera_documentos"
+            ? "espera"
+            : "pend";
+      const fases: ("pend" | "espera" | "ok")[] = [fase(regEstatus)];
+      if (verifEstatus && verifEstatus !== "borrador") {
+        fases.push(
+          !revisionCompleta ? "pend" : hayCorreccionVerif ? "espera" : "ok",
+        );
+      }
+      const estatus = fases.includes("pend")
+        ? "enviado"
+        : fases.includes("espera")
+          ? "en_espera_documentos"
+          : "completado";
+
       return {
         id: r._id.toString(),
         razonSocial: r.empresa?.razonSocial || "Registro sin nombre",
         usuarioNombre: r.usuarioNombre || r.usuarioEmail || "Establecimiento",
-        giro: r.registro?.giro ?? null,
+        giro,
         pct: computeProgress(r as Parameters<typeof computeProgress>[0]).pct,
         verifPct: verifCalc.pct,
         verifIniciada: verifCalc.contestadas > 0,
-        estatus: r.estatus as string,
+        estatus,
         correcciones,
         actualizadoEn: r.actualizadoEn
           ? new Date(r.actualizadoEn).toLocaleDateString("es-MX")

@@ -200,7 +200,7 @@ export async function buildVerificacionPdf(data: Data): Promise<Uint8Array> {
   } else {
     put(p0, enc.ejecutivo, 175, 585, 8);
   }
-  put(p0, enc.evaluador, 382, 585, 8);
+  put(p0, enc.evaluador, 405, 585, 8);
 
   // Cajas de porcentaje (centradas en su recuadro).
   const globalPct = calcVerificacion(respuestas, preguntasAplicables(giro, opts)).pct;
@@ -247,10 +247,10 @@ export async function buildVerificacionPdf(data: Data): Promise<Uint8Array> {
       if (v?.r === "si") put(page, "X", COL.si - 3, y + 11, 10, bold);
       else if (v?.r === "no") put(page, "X", COL.no - 3, y + 11, 10, bold);
 
-      // La descripción del usuario va en "Evidencias de Cumplimiento".
-      // (Las fotos NO se ponen en el PDF; las revisa el consultor en la plataforma.)
-      // Para textos largos se reduce el tamaño de letra para que quepa mejor.
-      if (v?.obs) {
+      // La descripción del usuario va en "Evidencias de Cumplimiento" SOLO si la
+      // respuesta es "Sí cumple" (si cambió a "No cumple", esa nota queda obsoleta).
+      // Las fotos NO se ponen en el PDF; las revisa el consultor en la plataforma.
+      if (v?.r === "si" && v?.obs) {
         const len = v.obs.length;
         const sz = len > 320 ? 5 : len > 200 ? 5.5 : len > 110 ? 6.5 : 7.5;
         wrap(v.obs, font, sz, EVID_W).forEach((ln, i) =>

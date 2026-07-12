@@ -108,7 +108,26 @@ export const TIPOS_EVALUACION: { v: TipoEvaluacion; label: string }[] = [
 export const REGISTRO_CONSULTOR = "SECTUR-RCSF-004-2024";
 
 export type Evidencia = { key: string; nombre: string };
-export type RespValor = { r: Respuesta; obs?: string; evidencias?: Evidencia[] };
+// Plan de acción (solo cuando "No cumple") — alimenta el Plan 3W (qué/quién/cuándo).
+export type PlanMejora = {
+  actividades: string;
+  responsable: string;
+  fecha: string;
+};
+export type RespValor = {
+  r: Respuesta;
+  obs?: string; // descripción de evidencia (Sí cumple)
+  evidencias?: Evidencia[]; // fotos (Sí cumple)
+  plan?: PlanMejora; // acciones (No cumple)
+};
+// Datos del pie del Plan 3W, por familia (cuando tiene ≥1 "No cumple").
+export type PlanFamilia = {
+  ugb: string;
+  lider: string;
+  miembros: string;
+  director: string;
+};
+export type PlanesFamilia = Record<string, PlanFamilia>; // familiaId -> datos
 export type RespuestasVerif = Record<string, RespValor>; // codigo -> respuesta
 
 // Puntaje sobre TODOS los indicadores aplicables (no solo los contestados):

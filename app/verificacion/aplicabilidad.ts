@@ -12,7 +12,13 @@
 // 3.4 Hospital/Clínica; 4.5 y 4.7 todos menos Restaurante; 4.2 y 4.9 solo si el giro es
 // Restaurante o si el establecimiento cuenta con restaurante. El resto "todos".
 
-import { FAMILIAS, TODAS_PREGUNTAS, type Familia, type Pregunta } from "./data";
+import {
+  FAMILIAS,
+  TODAS_PREGUNTAS,
+  type Familia,
+  type Pregunta,
+  type RespuestasVerif,
+} from "./data";
 
 // "todos" | lista de giros que aplican | { excepto: giros que NO aplican }
 //   | { soloSiRestaurante: true } = aplica si el giro es Restaurante O si el
@@ -114,6 +120,20 @@ export function motivoNoAplica(
     return "No aplica porque el establecimiento no cuenta con restaurante / servicio de alimentos.";
   }
   return `No aplica para el giro «${giro ?? "—"}».`;
+}
+
+// Familias que requieren un Plan 3W: tienen ≥1 indicador APLICABLE marcado como
+// "No cumple". Devuelve {id, nombre} de cada una (1 Plan 3W por familia).
+export function familiasConPlan(
+  respuestas: RespuestasVerif,
+  giro: string | null | undefined,
+  opts?: OpcionesAplic,
+): { id: string; nombre: string }[] {
+  return FAMILIAS.filter((f) =>
+    f.preguntas.some(
+      (p) => aplicaAlGiro(p.codigo, giro, opts) && respuestas[p.codigo]?.r === "no",
+    ),
+  ).map((f) => ({ id: f.id, nombre: f.nombre }));
 }
 
 // Familias con solo sus preguntas aplicables; se omiten las familias vacías.

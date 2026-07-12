@@ -1,14 +1,20 @@
 import { getDb } from "@/lib/mongodb";
 import { getCurrentUser } from "@/lib/auth";
 import {
+  FAMILIAS,
   TODAS_PREGUNTAS,
   calcVerificacion,
   type Respuesta,
   type RespuestasVerif,
   type RespValor,
   type Evidencia,
+  type PlanFamilia,
+  type PlanesFamilia,
 } from "@/app/verificacion/data";
-import { preguntasAplicables } from "@/app/verificacion/aplicabilidad";
+import {
+  aplicaAlGiro,
+  preguntasAplicables,
+} from "@/app/verificacion/aplicabilidad";
 
 const RESPUESTAS_VALIDAS: Respuesta[] = ["na", "no", "si"];
 
@@ -46,7 +52,43 @@ function parseRespuestas(raw: unknown): RespuestasVerif | null {
     if (obsStr) entry.obs = obsStr;
     const evid = parseEvidencias((val as Record<string, unknown>).evidencias);
     if (evid.length) entry.evidencias = evid;
+    // Plan de acción (solo "No cumple"): actividades / responsable / fecha.
+    const planRaw = (val as Record<string, unknown>).plan;
+    if (planRaw && typeof planRaw === "object") {
+      const g = (k: string) => {
+        const v = (planRaw as Record<string, unknown>)[k];
+        return typeof v === "string" ? v.trim() : "";
+      };
+      const actividades = g("actividades");
+      const responsable = g("responsable");
+      const fecha = g("fecha");
+      if (actividades || responsable || fecha) {
+        entry.plan = { actividades, responsable, fecha };
+      }
+    }
     out[codigo] = entry;
+  }
+  return out;
+}
+
+// Datos del pie del Plan 3W por familia (solo ids de familias conocidas).
+function parsePlanFamilia(raw: unknown): PlanesFamilia {
+  const out: PlanesFamilia = {};
+  if (!raw || typeof raw !== "object") return out;
+  const famIds = new Set(FAMILIAS.map((f) => f.id));
+  for (const [fid, val] of Object.entries(raw as Record<string, unknown>)) {
+    if (!famIds.has(fid) || !val || typeof val !== "object") continue;
+    const g = (k: string) => {
+      const v = (val as Record<string, unknown>)[k];
+      return typeof v === "string" ? v.trim() : "";
+    };
+    const pf: PlanFamilia = {
+      ugb: g("ugb"),
+      lider: g("lider"),
+      miembros: g("miembros"),
+      director: g("director"),
+    };
+    if (pf.ugb || pf.lider || pf.miembros || pf.director) out[fid] = pf;
   }
   return out;
 }
@@ -75,6 +117,7 @@ export async function POST(request: Request) {
       ? body.tipoEvaluacion
       : "diagnostica";
   const tieneRestaurante = body.tieneRestaurante === true;
+  const planFamilia = parsePlanFamilia(body.planFamilia);
   const respuestas = parseRespuestas(body.respuestas);
   if (!respuestas) {
     return Response.json(
@@ -103,28 +146,60 @@ export async function POST(request: Request) {
 
   const calc = calcVerificacion(respuestas, aplicables);
 
-  // Al ENVIAR se exige, SOLO en las preguntas aplicables al giro: respuesta
-  // (no/sí), nota y al menos una foto. Las no aplicables no se exigen.
+  // Al ENVIAR se exige, SOLO en las preguntas aplicables al giro:
+  //  - "Sí cumple" → descripción + al menos una foto.
+  //  - "No cumple" → plan de acción (actividades, responsable y fecha).
   if (accion === "enviar") {
     const faltResp: string[] = [];
     const faltNota: string[] = [];
     const faltFoto: string[] = [];
+    const faltPlan: string[] = [];
     for (const p of aplicables) {
       const v = respuestas[p.codigo];
       const r = v?.r;
-      if (r !== "no" && r !== "si") faltResp.push(p.codigo);
-      if (!v?.obs?.trim()) faltNota.push(p.codigo);
-      if (!(v?.evidencias && v.evidencias.length > 0)) faltFoto.push(p.codigo);
+      if (r !== "no" && r !== "si") {
+        faltResp.push(p.codigo);
+        continue;
+      }
+      if (r === "si") {
+        if (!v?.obs?.trim()) faltNota.push(p.codigo);
+        if (!(v?.evidencias && v.evidencias.length > 0)) faltFoto.push(p.codigo);
+      } else {
+        const pl = v?.plan;
+        if (!pl?.actividades?.trim() || !pl?.responsable?.trim() || !pl?.fecha)
+          faltPlan.push(p.codigo);
+      }
     }
-    if (faltResp.length || faltNota.length || faltFoto.length) {
+    // Cada familia con "No cumple" necesita los datos del 3W.
+    const famsSinDatos: string[] = [];
+    for (const fam of FAMILIAS) {
+      const tieneNo = fam.preguntas.some(
+        (p) =>
+          aplicaAlGiro(p.codigo, giro, { tieneRestaurante }) &&
+          respuestas[p.codigo]?.r === "no",
+      );
+      if (!tieneNo) continue;
+      const pf = planFamilia[fam.id];
+      if (!pf?.ugb || !pf?.lider || !pf?.miembros || !pf?.director)
+        famsSinDatos.push(fam.id);
+    }
+    if (
+      faltResp.length ||
+      faltNota.length ||
+      faltFoto.length ||
+      faltPlan.length ||
+      famsSinDatos.length
+    ) {
       return Response.json(
         {
           ok: false,
           error:
-            "Cada pregunta aplicable necesita respuesta, una nota y al menos una foto de evidencia.",
+            "Sí cumple necesita descripción y foto; No cumple necesita plan de acción; y cada familia con 'No cumple' necesita los datos del Plan 3W.",
           faltResp,
           faltNota,
           faltFoto,
+          faltPlan,
+          famsSinDatos,
         },
         { status: 422 },
       );
@@ -138,6 +213,7 @@ export async function POST(request: Request) {
       "verificacion.respuestas": respuestas,
       "verificacion.tipoEvaluacion": tipoEvaluacion,
       "verificacion.tieneRestaurante": tieneRestaurante,
+      "verificacion.planFamilia": planFamilia,
       "verificacion.actualizadoEn": now,
       // Mantenemos estos datos por si el doc se crea desde la verificación.
       usuarioNombre: user.nombre,

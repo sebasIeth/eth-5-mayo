@@ -7,7 +7,11 @@ const nextConfig: NextConfig = {
   // en el bundle serverless de Vercel (si no, la descarga daría 500).
   outputFileTracingIncludes: {
     "/api/registro/pdf": ["./templates/**"],
+    "/api/registro/xlsx": ["./templates/**"],
     "/api/verificacion/pdf": ["./templates/**"],
+    "/api/verificacion/docx": ["./templates/**"],
+    "/api/plan3w/pdf": ["./templates/**"],
+    "/api/plan3w/xlsx": ["./templates/**"],
   },
 };
 

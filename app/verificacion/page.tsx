@@ -8,10 +8,12 @@ import {
   REGISTRO_CONSULTOR,
   type RespuestasVerif,
   type TipoEvaluacion,
+  type PlanesFamilia,
 } from "./data";
 import { type VerifRevisiones } from "./revision";
 import VerificacionForm from "./VerificacionForm";
 import PlatformUser from "../components/PlatformUser";
+import DescargarDoc from "../components/DescargarDoc";
 
 export const metadata: Metadata = {
   title: "Lista de Verificación Inicial · Sello de Turismo de Salud",
@@ -34,6 +36,7 @@ export default async function VerificacionPage() {
     tipoEvaluacion?: TipoEvaluacion;
     tieneRestaurante?: boolean;
     porcentajeObtenido?: number;
+    planFamilia?: PlanesFamilia;
   };
   const respuestas: RespuestasVerif = verif.respuestas ?? {};
   const estatus = verif.estatus ?? "borrador";
@@ -88,9 +91,11 @@ export default async function VerificacionPage() {
           )}
           {tieneVerificacion && (
             <p className="vf-hint">
-              <a href="/api/verificacion/pdf" className="dash-btn dash-btn--rojo">
-                Descargar PDF
-              </a>
+              <DescargarDoc
+                pdfUrl="/api/verificacion/pdf"
+                altUrl="/api/verificacion/docx"
+                altLabel="Word"
+              />
             </p>
           )}
         </div>
@@ -104,6 +109,7 @@ export default async function VerificacionPage() {
           tipoInicial={tipoEvaluacion}
           tieneRestauranteInicial={verif.tieneRestaurante ?? false}
           porcentajeObtenidoInicial={verif.porcentajeObtenido ?? null}
+          planFamiliaInicial={verif.planFamilia ?? {}}
         />
       </main>
 

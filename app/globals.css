@@ -2194,6 +2194,87 @@ button:focus-visible {
   display: flex;
   gap: 8px;
 }
+
+/* Selector de descarga PDF / Word-Excel */
+.ddoc {
+  position: relative;
+  display: inline-block;
+}
+.ddoc__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.ddoc__chev {
+  transition: transform 0.15s ease;
+}
+.ddoc.is-open .ddoc__chev {
+  transform: rotate(180deg);
+}
+.ddoc__menu {
+  position: absolute;
+  z-index: 40;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 140px;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: var(--shadow-md);
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.ddoc__opt {
+  display: block;
+  padding: 9px 12px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--navy);
+  text-decoration: none;
+}
+.ddoc__opt:hover {
+  background: var(--hielo);
+  color: var(--azul);
+}
+
+/* Planes 3W en la tarjeta del panel */
+.dash-3w {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px dashed var(--border);
+}
+.dash-3w__title {
+  margin: 0 0 10px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--rojo);
+}
+.dash-3w__list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.dash-3w__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--white);
+}
+.dash-3w__fam {
+  font-size: 0.92rem;
+  color: var(--navy);
+}
 .dash-btn {
   font-weight: 600;
   font-size: 0.85rem;
@@ -3290,6 +3371,83 @@ button:focus-visible {
   border: 1px dashed var(--border);
   border-radius: 10px;
   background: var(--hielo);
+}
+
+/* Plan de acción (cuando "No cumple") */
+.vf-plan {
+  margin-top: 10px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--rojo);
+  border-radius: 10px;
+  background: rgba(200, 16, 46, 0.04);
+}
+.vf-plan__title {
+  margin: 0 0 8px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--rojo);
+}
+.vf-plan__row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 10px;
+}
+.vf-plan__field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.vf-plan__field > span {
+  font-size: 0.74rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.vf-plan__field input {
+  padding: 9px 11px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-family: var(--font-body);
+  font-size: 0.92rem;
+  color: var(--navy);
+  background: var(--white);
+}
+.vf-plan__field input:focus {
+  outline: none;
+  border-color: var(--azul);
+}
+@media (max-width: 560px) {
+  .vf-plan__row {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Datos del Plan 3W por familia (cuando hay "No cumple") */
+.vf-planfam {
+  margin-top: 18px;
+  padding: 14px 16px;
+  border: 1px solid var(--rojo);
+  border-radius: 12px;
+  background: rgba(200, 16, 46, 0.05);
+}
+.vf-planfam__title {
+  margin: 0 0 12px;
+  font-weight: 700;
+  font-size: 0.92rem;
+  color: var(--rojo);
+}
+.vf-planfam__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+@media (max-width: 560px) {
+  .vf-planfam__grid {
+    grid-template-columns: 1fr;
+  }
 }
 .vf-evid__head {
   display: flex;

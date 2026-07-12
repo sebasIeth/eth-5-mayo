@@ -18,10 +18,12 @@ import {
 } from "../../verificacion/data";
 import {
   familiasAplicables,
+  familiasConPlan,
   preguntasAplicables,
 } from "../../verificacion/aplicabilidad";
 import { type VerifRevisiones } from "../../verificacion/revision";
 import PlatformUser from "../../components/PlatformUser";
+import DescargarDoc from "../../components/DescargarDoc";
 import RevisionForm from "./RevisionForm";
 import VerificacionRevisionForm from "./VerificacionRevisionForm";
 import DocBlock from "./DocBlock";
@@ -86,6 +88,7 @@ export default async function RevisarPage({
   const verifCalc = calcVerificacion(respuestas, verifAplicables);
   const verifRevisiones = verifDoc.revisiones ?? {};
   const verifCumple = verifCalc.pct >= UMBRAL_APROBACION;
+  const verifPlanes = familiasConPlan(respuestas, verifGiro, verifOpts);
 
   return (
     <div className="rg-page">
@@ -126,12 +129,11 @@ export default async function RevisarPage({
           actions={
             <>
               <span className={`dash-badge ${est.cls}`}>{est.label}</span>
-              <a
-                href={`/api/registro/pdf?id=${id}`}
-                className="dash-btn dash-btn--rojo"
-              >
-                Descargar PDF
-              </a>
+              <DescargarDoc
+                pdfUrl={`/api/registro/pdf?id=${id}`}
+                altUrl={`/api/registro/xlsx?id=${id}`}
+                altLabel="Excel"
+              />
             </>
           }
         >
@@ -210,12 +212,11 @@ export default async function RevisarPage({
                     ? `Cumple ${UMBRAL_APROBACION}%`
                     : `${verifCalc.pct}%`}
               </span>
-              <a
-                href={`/api/verificacion/pdf?id=${id}`}
-                className="dash-btn dash-btn--rojo"
-              >
-                Descargar PDF
-              </a>
+              <DescargarDoc
+                pdfUrl={`/api/verificacion/pdf?id=${id}`}
+                altUrl={`/api/verificacion/docx?id=${id}`}
+                altLabel="Word"
+              />
             </>
           }
         >
@@ -247,6 +248,37 @@ export default async function RevisarPage({
             </>
           )}
         </DocBlock>
+
+        {/* ================= Planes 3W (por familia con "No cumple") ============ */}
+        {verifPlanes.length > 0 && (
+          <DocBlock
+            code="MSE-FO-57"
+            title="Planes 3W"
+            actions={
+              <span className="dash-badge is-wait">
+                {verifPlanes.length} familia(s)
+              </span>
+            }
+          >
+            <p className="dash-sub">
+              Un Plan 3W por cada familia con indicadores en “No cumple”.
+            </p>
+            <ul className="dash-3w__list">
+              {verifPlanes.map((f) => (
+                <li key={f.id} className="dash-3w__item">
+                  <span className="dash-3w__fam">
+                    <strong>{f.id}</strong> · {f.nombre}
+                  </span>
+                  <DescargarDoc
+                    pdfUrl={`/api/plan3w/pdf?id=${id}&familia=${f.id}`}
+                    altUrl={`/api/plan3w/xlsx?id=${id}&familia=${f.id}`}
+                    altLabel="Excel"
+                  />
+                </li>
+              ))}
+            </ul>
+          </DocBlock>
+        )}
       </main>
 
       <footer className="rg-foot">

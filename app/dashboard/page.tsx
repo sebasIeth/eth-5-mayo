@@ -6,8 +6,12 @@ import { getDb } from "@/lib/mongodb";
 import { DOCUMENTOS } from "../registro/data";
 import { computeProgress } from "../registro/progress";
 import { calcVerificacion, type RespuestasVerif } from "../verificacion/data";
-import { preguntasAplicables } from "../verificacion/aplicabilidad";
+import {
+  preguntasAplicables,
+  familiasConPlan,
+} from "../verificacion/aplicabilidad";
 import PlatformUser from "../components/PlatformUser";
+import DescargarDoc from "../components/DescargarDoc";
 
 export const metadata: Metadata = {
   title: "Mi panel · Sello de Turismo de Salud",
@@ -29,6 +33,7 @@ type VerifData = {
   iniciada: boolean;
   revEstado: "aprobado" | "correccion" | null;
   revCorrecciones: number;
+  planes3w: { id: string; nombre: string }[];
 };
 
 type RegistroItem = {
@@ -99,6 +104,9 @@ export default async function DashboardPage() {
       iniciada: vc.contestadas > 0 || !!verifDoc.estatus,
       revEstado,
       revCorrecciones: numCorrecciones,
+      planes3w: familiasConPlan(verifDoc.respuestas ?? {}, r.registro?.giro ?? null, {
+        tieneRestaurante: verifDoc.tieneRestaurante === true,
+      }),
     };
     return {
       id: r._id.toString(),
@@ -205,12 +213,11 @@ export default async function DashboardPage() {
                         Editar
                       </Link>
                       {r.pct === 100 && (
-                        <a
-                          href="/api/registro/pdf"
-                          className="dash-btn dash-btn--rojo"
-                        >
-                          Descargar PDF
-                        </a>
+                        <DescargarDoc
+                          pdfUrl="/api/registro/pdf"
+                          altUrl="/api/registro/xlsx"
+                          altLabel="Excel"
+                        />
                       )}
                     </div>
                   </div>
@@ -267,6 +274,30 @@ export default async function DashboardPage() {
                     </div>
                   </div>
                 </div>
+
+                {/* ===== Planes 3W (1 por familia con "No cumple") ===== */}
+                {r.verif.planes3w.length > 0 && (
+                  <div className="dash-3w">
+                    <h4 className="dash-3w__title">
+                      Planes 3W · {r.verif.planes3w.length} familia(s) con acciones
+                      pendientes
+                    </h4>
+                    <ul className="dash-3w__list">
+                      {r.verif.planes3w.map((f) => (
+                        <li key={f.id} className="dash-3w__item">
+                          <span className="dash-3w__fam">
+                            <strong>{f.id}</strong> · {f.nombre}
+                          </span>
+                          <DescargarDoc
+                            pdfUrl={`/api/plan3w/pdf?familia=${f.id}`}
+                            altUrl={`/api/plan3w/xlsx?familia=${f.id}`}
+                            altLabel="Excel"
+                          />
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
                 </li>
               );
             })}

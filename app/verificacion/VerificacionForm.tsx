@@ -7,11 +7,18 @@ import {
   UMBRAL_APROBACION,
   calcVerificacion,
   type Familia,
+  type PlanMejora,
+  type PlanFamilia,
+  type PlanesFamilia,
   type Respuesta,
   type RespuestasVerif,
   type TipoEvaluacion,
 } from "./data";
-import { preguntasAplicables, familiasAplicables } from "./aplicabilidad";
+import {
+  aplicaAlGiro,
+  preguntasAplicables,
+  familiasAplicables,
+} from "./aplicabilidad";
 import type { VerifRevisiones } from "./revision";
 
 const OPCIONES: { r: Respuesta; label: string; cls: string }[] = [
@@ -45,6 +52,14 @@ type Props = {
   tieneRestauranteInicial: boolean;
   // % global congelado al enviar por primera vez (null si aún no se envía).
   porcentajeObtenidoInicial: number | null;
+  planFamiliaInicial: PlanesFamilia;
+};
+
+const PLAN_FAM_VACIO: PlanFamilia = {
+  ugb: "",
+  lider: "",
+  miembros: "",
+  director: "",
 };
 
 export default function VerificacionForm({
@@ -56,7 +71,10 @@ export default function VerificacionForm({
   tipoInicial,
   tieneRestauranteInicial,
   porcentajeObtenidoInicial,
+  planFamiliaInicial,
 }: Props) {
+  const [planFamilia, setPlanFamilia] =
+    useState<PlanesFamilia>(planFamiliaInicial);
   const [tipo, setTipo] = useState<TipoEvaluacion>(tipoInicial);
   // Solo se pregunta cuando el giro NO es Restaurante (un restaurante siempre
   // cuenta con restaurante). Condiciona los indicadores 4.2 y 4.9.
@@ -137,14 +155,43 @@ export default function VerificacionForm({
 
   const [subiendo, setSubiendo] = useState<Record<string, boolean>>({});
 
+  async function borrarEvidenciasR2(keys: string[]) {
+    if (!keys.length) return;
+    try {
+      await fetch("/api/evidencia/delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ keys }),
+      });
+    } catch {
+      /* borrado silencioso */
+    }
+  }
+
   function setResp(codigo: string, r: Respuesta) {
     if (bloqueado(codigo)) return;
     setSaved(false);
     setServerError(null);
-    setRespuestas((s) => ({
-      ...s,
-      [codigo]: { r, obs: s[codigo]?.obs, evidencias: s[codigo]?.evidencias },
-    }));
+    const prev = respuestas[codigo];
+    // Al pasar a "No cumple" se borran las fotos de R2 (y se limpia la descripción).
+    if (r === "no" && prev?.evidencias?.length) {
+      void borrarEvidenciasR2(prev.evidencias.map((e) => e.key));
+    }
+    setRespuestas((s) => {
+      const p = s[codigo];
+      if (r === "no") {
+        // No cumple: limpia descripción y fotos; conserva el plan.
+        return { ...s, [codigo]: { r, plan: p?.plan } };
+      }
+      if (r === "si") {
+        // Sí cumple: limpia el plan; conserva descripción y fotos.
+        return { ...s, [codigo]: { r, obs: p?.obs, evidencias: p?.evidencias } };
+      }
+      return {
+        ...s,
+        [codigo]: { r, obs: p?.obs, evidencias: p?.evidencias, plan: p?.plan },
+      };
+    });
   }
 
   function setObs(codigo: string, obs: string) {
@@ -152,11 +199,38 @@ export default function VerificacionForm({
     setSaved(false);
     setRespuestas((s) => {
       const prev = s[codigo];
-      return {
-        ...s,
-        [codigo]: { r: prev?.r ?? "na", obs, evidencias: prev?.evidencias },
-      };
+      return { ...s, [codigo]: { ...(prev ?? { r: "si" }), obs } };
     });
+  }
+
+  function setPlan(codigo: string, campo: keyof PlanMejora, valor: string) {
+    if (bloqueado(codigo)) return;
+    setSaved(false);
+    setRespuestas((s) => {
+      const prev = s[codigo];
+      const plan: PlanMejora = {
+        actividades: "",
+        responsable: "",
+        fecha: "",
+        ...(prev?.plan ?? {}),
+        [campo]: valor,
+      };
+      return { ...s, [codigo]: { ...(prev ?? { r: "no" }), plan } };
+    });
+  }
+
+  // ¿La familia tiene ≥1 indicador aplicable en "No cumple"? (necesita 3W)
+  const familiaTieneNoCumple = (fam: Familia) =>
+    fam.preguntas.some(
+      (p) => aplicaAlGiro(p.codigo, giro, opts) && respuestas[p.codigo]?.r === "no",
+    );
+
+  function setPlanFam(famId: string, campo: keyof PlanFamilia, valor: string) {
+    setSaved(false);
+    setPlanFamilia((s) => ({
+      ...s,
+      [famId]: { ...PLAN_FAM_VACIO, ...(s[famId] ?? {}), [campo]: valor },
+    }));
   }
 
   async function subirEvidencias(codigo: string, fileList: FileList | null) {
@@ -196,6 +270,7 @@ export default function VerificacionForm({
 
   function quitarEvidencia(codigo: string, key: string) {
     setSaved(false);
+    void borrarEvidenciasR2([key]); // borra la foto de R2 al quitarla
     setRespuestas((s) => {
       const prev = s[codigo];
       if (!prev) return s;
@@ -219,18 +294,47 @@ export default function VerificacionForm({
         window.scrollTo({ top: 0, behavior: "smooth" });
         return;
       }
-      // Cada pregunta aplicable: respuesta (no/sí), nota y al menos una foto.
+      // Sí cumple → descripción + foto. No cumple → plan (actividades/responsable/fecha).
       const faltResp: string[] = [];
       const faltNota: string[] = [];
       const faltFoto: string[] = [];
+      const faltPlan: string[] = [];
       for (const p of aplicables) {
         const v = respuestas[p.codigo];
         const r = v?.r;
-        if (r !== "no" && r !== "si") faltResp.push(p.codigo);
-        if (!v?.obs?.trim()) faltNota.push(p.codigo);
-        if (!(v?.evidencias && v.evidencias.length > 0)) faltFoto.push(p.codigo);
+        if (r !== "no" && r !== "si") {
+          faltResp.push(p.codigo);
+          continue;
+        }
+        if (r === "si") {
+          if (!v?.obs?.trim()) faltNota.push(p.codigo);
+          if (!(v?.evidencias && v.evidencias.length > 0)) faltFoto.push(p.codigo);
+        } else {
+          const pl = v?.plan;
+          if (!pl?.actividades?.trim() || !pl?.responsable?.trim() || !pl?.fecha)
+            faltPlan.push(p.codigo);
+        }
       }
-      if (faltResp.length || faltNota.length || faltFoto.length) {
+      // Cada familia con "No cumple" necesita los datos del 3W.
+      const famsSinDatos: string[] = [];
+      for (const fam of familias) {
+        if (!familiaTieneNoCumple(fam)) continue;
+        const pf = planFamilia[fam.id];
+        if (
+          !pf?.ugb?.trim() ||
+          !pf?.lider?.trim() ||
+          !pf?.miembros?.trim() ||
+          !pf?.director?.trim()
+        )
+          famsSinDatos.push(fam.id);
+      }
+      if (
+        faltResp.length ||
+        faltNota.length ||
+        faltFoto.length ||
+        faltPlan.length ||
+        famsSinDatos.length
+      ) {
         const partes: string[] = [];
         if (faltResp.length)
           partes.push(
@@ -238,15 +342,24 @@ export default function VerificacionForm({
           );
         if (faltNota.length)
           partes.push(
-            `nota en ${faltNota.length} (${faltNota.slice(0, 6).join(", ")}${faltNota.length > 6 ? "…" : ""})`,
+            `descripción en ${faltNota.length} (${faltNota.slice(0, 6).join(", ")}${faltNota.length > 6 ? "…" : ""})`,
           );
         if (faltFoto.length)
           partes.push(
             `al menos una foto en ${faltFoto.length} (${faltFoto.slice(0, 6).join(", ")}${faltFoto.length > 6 ? "…" : ""})`,
           );
+        if (faltPlan.length)
+          partes.push(
+            `plan de acción (actividades, responsable y fecha) en ${faltPlan.length} (${faltPlan.slice(0, 6).join(", ")}${faltPlan.length > 6 ? "…" : ""})`,
+          );
+        if (famsSinDatos.length)
+          partes.push(
+            `datos del Plan 3W (UGB, Líder, Miembros y Director) en ${famsSinDatos.join(", ")}`,
+          );
         setServerError(`Falta ${partes.join(" y ")}.`);
         // ir a la primera pregunta incompleta
-        const primero = faltResp[0] || faltNota[0] || faltFoto[0];
+        const primero =
+          faltResp[0] || faltNota[0] || faltFoto[0] || faltPlan[0];
         document
           .querySelector(`[data-codigo="${primero}"]`)
           ?.scrollIntoView({ block: "center", behavior: "smooth" });
@@ -263,6 +376,7 @@ export default function VerificacionForm({
           respuestas,
           tipoEvaluacion: tipo,
           tieneRestaurante,
+          planFamilia,
         }),
       });
       const data = await res.json().catch(() => null);
@@ -517,6 +631,7 @@ export default function VerificacionForm({
             </button>
 
             {estaAbierta(fam.id) && (
+            <>
             <ul className="vf-list">
               {fam.preguntas.map((p) => {
                 const val = respuestas[p.codigo];
@@ -565,17 +680,19 @@ export default function VerificacionForm({
 
                     {revField(p.codigo)}
 
-                    <textarea
-                      className="vf-obs"
-                      placeholder="Nota / observación (obligatoria) — ¿por qué aplica o no, y qué muestra la evidencia?"
-                      value={val?.obs ?? ""}
-                      readOnly={locked}
-                      onChange={(e) => setObs(p.codigo, e.target.value)}
-                      rows={2}
-                    />
+                    {/* Sí cumple → descripción de evidencia + fotos */}
+                    {val?.r === "si" && (
+                      <>
+                        <textarea
+                          className="vf-obs"
+                          placeholder="Evidencias de cumplimiento — describe cómo cumple y qué muestran las fotos (obligatorio)"
+                          value={val?.obs ?? ""}
+                          readOnly={locked}
+                          onChange={(e) => setObs(p.codigo, e.target.value)}
+                          rows={2}
+                        />
 
-                    {/* Evidencias: siempre visibles (toda pregunta aplicable requiere foto). */}
-                    <div className="vf-evid">
+                        <div className="vf-evid">
                         <div className="vf-evid__head">
                           <span className="vf-evid__label">
                             Evidencias (al menos 1)
@@ -620,11 +737,105 @@ export default function VerificacionForm({
                             ))}
                           </div>
                         )}
-                    </div>
+                        </div>
+                      </>
+                    )}
+
+                    {/* No cumple → plan de acción (alimenta el Plan 3W) */}
+                    {val?.r === "no" && (
+                      <div className="vf-plan">
+                        <p className="vf-plan__title">
+                          Plan de acción para cumplir
+                        </p>
+                        <textarea
+                          className="vf-obs"
+                          placeholder="Actividades a realizar para cumplir (obligatorio)"
+                          value={val?.plan?.actividades ?? ""}
+                          readOnly={locked}
+                          onChange={(e) =>
+                            setPlan(p.codigo, "actividades", e.target.value)
+                          }
+                          rows={2}
+                        />
+                        <div className="vf-plan__row">
+                          <label className="vf-plan__field">
+                            <span>Responsable</span>
+                            <input
+                              type="text"
+                              value={val?.plan?.responsable ?? ""}
+                              readOnly={locked}
+                              placeholder="Nombre del responsable"
+                              onChange={(e) =>
+                                setPlan(p.codigo, "responsable", e.target.value)
+                              }
+                            />
+                          </label>
+                          <label className="vf-plan__field">
+                            <span>¿Cuándo piensa cumplir?</span>
+                            <input
+                              type="date"
+                              value={val?.plan?.fecha ?? ""}
+                              readOnly={locked}
+                              onChange={(e) =>
+                                setPlan(p.codigo, "fecha", e.target.value)
+                              }
+                            />
+                          </label>
+                        </div>
+                      </div>
+                    )}
                   </li>
                 );
               })}
             </ul>
+
+            {/* Familia con "No cumple" → datos del Plan 3W (obligatorios) */}
+            {familiaTieneNoCumple(fam) && (
+              <div className="vf-planfam">
+                <p className="vf-planfam__title">
+                  Datos del Plan 3W de {fam.nombre} (obligatorios)
+                </p>
+                <div className="vf-planfam__grid">
+                  <label className="vf-plan__field">
+                    <span>UGB</span>
+                    <input
+                      type="text"
+                      value={planFamilia[fam.id]?.ugb ?? ""}
+                      onChange={(e) => setPlanFam(fam.id, "ugb", e.target.value)}
+                    />
+                  </label>
+                  <label className="vf-plan__field">
+                    <span>Líder</span>
+                    <input
+                      type="text"
+                      value={planFamilia[fam.id]?.lider ?? ""}
+                      onChange={(e) => setPlanFam(fam.id, "lider", e.target.value)}
+                    />
+                  </label>
+                  <label className="vf-plan__field">
+                    <span>Miembros</span>
+                    <input
+                      type="text"
+                      value={planFamilia[fam.id]?.miembros ?? ""}
+                      onChange={(e) =>
+                        setPlanFam(fam.id, "miembros", e.target.value)
+                      }
+                    />
+                  </label>
+                  <label className="vf-plan__field">
+                    <span>Director</span>
+                    <input
+                      type="text"
+                      value={planFamilia[fam.id]?.director ?? ""}
+                      onChange={(e) =>
+                        setPlanFam(fam.id, "director", e.target.value)
+                      }
+                    />
+                  </label>
+                </div>
+              </div>
+            )}
+            </>
             )}
           </section>
         );

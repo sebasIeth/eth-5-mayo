@@ -119,7 +119,7 @@ export default function RegistroForm({ initial }: { initial?: InitialData }) {
   const docsEntregados = Object.values(documentos).filter((d) => d).length;
 
   function handleFirma(file: File | null) {
-    if (bloqueoTotal) return; // firma bloqueada tras aprobación total
+    // La firma se puede cambiar aunque el registro ya esté aprobado.
     setErrors((e) => ({ ...e, firma: "" }));
     setSaved(false);
     if (!file) {
