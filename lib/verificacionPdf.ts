@@ -203,23 +203,26 @@ export async function buildVerificacionPdf(data: Data): Promise<Uint8Array> {
   } else {
     put(p0, enc.ejecutivo, 175, 585, 8);
   }
-  // Firma Consultor: si la verificación está aprobada, va su firma escaneada;
-  // si no, su nombre.
-  if (data.aprobada && fs.existsSync(FIRMA_CONSULTOR)) {
-    try {
-      const img = await pdf.embedPng(fs.readFileSync(FIRMA_CONSULTOR));
-      const s = Math.min(120 / img.width, 38 / img.height, 1);
-      p0.drawImage(img, {
-        x: 400,
-        y: Y(596),
-        width: img.width * s,
-        height: img.height * s,
-      });
-    } catch {
-      put(p0, enc.evaluador, 405, 585, 8);
+  // Firma Consultor: SOLO cuando la verificación está aprobada va su firma
+  // escaneada. Antes de aprobar, la línea queda en blanco (nunca el nombre).
+  if (data.aprobada) {
+    let puesta = false;
+    if (fs.existsSync(FIRMA_CONSULTOR)) {
+      try {
+        const img = await pdf.embedPng(fs.readFileSync(FIRMA_CONSULTOR));
+        const s = Math.min(120 / img.width, 38 / img.height, 1);
+        p0.drawImage(img, {
+          x: 400,
+          y: Y(596),
+          width: img.width * s,
+          height: img.height * s,
+        });
+        puesta = true;
+      } catch {
+        /* si falla la imagen, cae al nombre */
+      }
     }
-  } else {
-    put(p0, enc.evaluador, 405, 585, 8);
+    if (!puesta) put(p0, enc.evaluador, 405, 585, 8);
   }
 
   // Cajas de porcentaje (centradas en su recuadro).
