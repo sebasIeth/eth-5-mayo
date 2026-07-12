@@ -3490,6 +3490,59 @@ button:focus-visible {
   }
 }
 
+/* "Pregúntale a Cynthia" (sugerencia de IA) */
+.vf-cynthia {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+  padding: 7px 14px;
+  border: 1px solid var(--azul);
+  border-radius: 999px;
+  background: var(--white);
+  color: var(--azul);
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    color 0.15s;
+}
+.vf-cynthia:hover:not(:disabled) {
+  background: var(--azul);
+  color: var(--white);
+}
+.vf-cynthia:disabled {
+  opacity: 0.65;
+  cursor: default;
+}
+.vf-cynthia__hint {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 8px 0 0;
+  padding: 10px 12px;
+  border: 1px dashed var(--azul);
+  border-radius: 10px;
+  background: var(--hielo);
+  font-size: 0.88rem;
+  color: var(--navy);
+  line-height: 1.4;
+}
+.vf-cynthia__hint > button {
+  flex: 0 0 auto;
+  padding: 5px 12px;
+  border: none;
+  border-radius: 8px;
+  background: var(--azul);
+  color: var(--white);
+  font-weight: 600;
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+
 /* Datos del Plan 3W por familia (cuando hay "No cumple") */
 .vf-planfam {
   margin-top: 18px;

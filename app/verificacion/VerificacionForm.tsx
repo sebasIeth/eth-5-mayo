@@ -155,6 +155,32 @@ export default function VerificacionForm({
   };
 
   const [subiendo, setSubiendo] = useState<Record<string, boolean>>({});
+  // "Pregúntale a Cynthia": sugerencia de IA por pregunta.
+  const [sugerencia, setSugerencia] = useState<Record<string, string>>({});
+  const [cynthiaLoad, setCynthiaLoad] = useState<Record<string, boolean>>({});
+
+  async function preguntarCynthia(codigo: string) {
+    if (cynthiaLoad[codigo]) return;
+    setCynthiaLoad((s) => ({ ...s, [codigo]: true }));
+    setServerError(null);
+    try {
+      const res = await fetch("/api/cynthia", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ codigo }),
+      });
+      const data = await res.json().catch(() => null);
+      if (res.ok && data?.sugerencia) {
+        setSugerencia((s) => ({ ...s, [codigo]: data.sugerencia }));
+      } else {
+        setServerError(data?.error || "Cynthia no pudo responder ahora.");
+      }
+    } catch {
+      setServerError("No se pudo contactar a la asistente.");
+    } finally {
+      setCynthiaLoad((s) => ({ ...s, [codigo]: false }));
+    }
+  }
 
   async function borrarEvidenciasR2(keys: string[]) {
     if (!keys.length) return;
@@ -721,14 +747,42 @@ export default function VerificacionForm({
                     {/* Sí cumple → descripción de evidencia + fotos */}
                     {val?.r === "si" && (
                       <>
+                        {!locked && (
+                          <button
+                            type="button"
+                            className="vf-cynthia"
+                            onClick={() => preguntarCynthia(p.codigo)}
+                            disabled={!!cynthiaLoad[p.codigo]}
+                          >
+                            {cynthiaLoad[p.codigo]
+                              ? "Cynthia está pensando…"
+                              : "✨ Pregúntale a Cynthia"}
+                          </button>
+                        )}
                         <textarea
                           className="vf-obs"
-                          placeholder="Evidencias de cumplimiento — describe cómo cumple y qué muestran las fotos (obligatorio)"
+                          placeholder={
+                            sugerencia[p.codigo] ||
+                            "Evidencias de cumplimiento — describe cómo cumple y qué muestran las fotos (obligatorio)"
+                          }
                           value={val?.obs ?? ""}
                           readOnly={locked}
                           onChange={(e) => setObs(p.codigo, e.target.value)}
                           rows={2}
                         />
+                        {sugerencia[p.codigo] && !val?.obs?.trim() && (
+                          <p className="vf-cynthia__hint">
+                            <span>💬 Cynthia sugiere: {sugerencia[p.codigo]}</span>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setObs(p.codigo, sugerencia[p.codigo])
+                              }
+                            >
+                              Usar
+                            </button>
+                          </p>
+                        )}
 
                         <div className="vf-evid">
                         <div className="vf-evid__head">
