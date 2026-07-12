@@ -423,6 +423,32 @@ export default function VerificacionForm({
       onSubmit={(e) => e.preventDefault()}
       noValidate
     >
+      {/* ===== Instrucciones de llenado ===== */}
+      <section className="rg-card vf-instr">
+        <h2 className="vf-instr__title">1. Instrucciones de llenado</h2>
+        <ol className="vf-instr__list">
+          <li>
+            Lee el <strong>criterio de evaluación</strong> de cada pregunta (el
+            desplegable “Criterio de evaluación”) para saber qué evidencias debes
+            presentar en ese punto.
+          </li>
+          <li>
+            Si el indicador <strong>Sí cumple</strong>: escribe la descripción de
+            cómo cumple y sube las <strong>fotos</strong> requeridas.
+          </li>
+          <li>
+            Si <strong>No cumple</strong>: llena el <strong>Plan de acción</strong>{" "}
+            (actividades a realizar, responsable y fecha de cumplimiento) y, al
+            final de esa familia, los <strong>Datos del Plan 3W</strong> (UGB,
+            Líder, Miembros y Director). Con eso se genera su Plan 3W.
+          </li>
+          <li>
+            Solo se muestran las preguntas que <strong>aplican a tu giro</strong>;
+            las que no aplican se manejan automáticamente.
+          </li>
+        </ol>
+      </section>
+
       {/* ===== Encabezado del documento ===== */}
       <section className="rg-card vf-head">
         <div className="vf-head__tipo">

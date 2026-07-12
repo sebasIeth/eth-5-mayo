@@ -3373,6 +3373,30 @@ button:focus-visible {
   background: var(--hielo);
 }
 
+/* Instrucciones de llenado (arriba del formulario de verificación) */
+.vf-instr {
+  border-left: 4px solid var(--azul);
+}
+.vf-instr__title {
+  margin: 0 0 12px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.15rem;
+  color: var(--azul);
+}
+.vf-instr__list {
+  margin: 0;
+  padding-left: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.vf-instr__list > li {
+  font-size: 0.95rem;
+  line-height: 1.45;
+  color: var(--navy);
+}
+
 /* Criterio de evaluación (evidencias requeridas) por pregunta */
 .vf-crit {
   margin: 8px 0 12px;
