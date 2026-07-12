@@ -768,21 +768,15 @@ export default function VerificacionForm({
                           value={val?.obs ?? ""}
                           readOnly={locked}
                           onChange={(e) => setObs(p.codigo, e.target.value)}
-                          rows={2}
+                          rows={
+                            sugerencia[p.codigo]
+                              ? Math.min(
+                                  9,
+                                  Math.max(3, Math.ceil(sugerencia[p.codigo].length / 60)),
+                                )
+                              : 2
+                          }
                         />
-                        {sugerencia[p.codigo] && !val?.obs?.trim() && (
-                          <p className="vf-cynthia__hint">
-                            <span>💬 Cynthia sugiere: {sugerencia[p.codigo]}</span>
-                            <button
-                              type="button"
-                              onClick={() =>
-                                setObs(p.codigo, sugerencia[p.codigo])
-                              }
-                            >
-                              Usar
-                            </button>
-                          </p>
-                        )}
 
                         <div className="vf-evid">
                         <div className="vf-evid__head">
