@@ -90,13 +90,13 @@ export default async function VerificacionPage() {
             </p>
           )}
           {tieneVerificacion && (
-            <p className="vf-hint">
+            <div className="vf-hint">
               <DescargarDoc
                 pdfUrl="/api/verificacion/pdf"
                 altUrl="/api/verificacion/docx"
                 altLabel="Word"
               />
-            </p>
+            </div>
           )}
         </div>
 
