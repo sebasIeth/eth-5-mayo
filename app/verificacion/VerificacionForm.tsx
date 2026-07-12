@@ -587,7 +587,15 @@ export default function VerificacionForm({
           </div>
           <div className="vf-firma">
             <div className="vf-firma__box">
-              <span className="vf-firma__cursiva">{encabezado.evaluador}</span>
+              {/* La firma del consultor solo aparece cuando dio el visto bueno. */}
+              {estatus === "completado" && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  className="vf-firma__img"
+                  src="/brand/firma-consultor.png"
+                  alt="Firma de la consultora"
+                />
+              )}
             </div>
             <span className="vf-firma__label">Firma Consultor</span>
           </div>
