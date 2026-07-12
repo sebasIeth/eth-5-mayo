@@ -93,6 +93,8 @@ export default function RegistroForm({ initial }: { initial?: InitialData }) {
   const [submitting, setSubmitting] = useState<null | "guardar" | "enviar">(null);
   const [serverError, setServerError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
+  // ¿Hay cambios sin guardar? Solo entonces se muestra la barra de acciones.
+  const [dirty, setDirty] = useState(false);
   const [estatus, setEstatus] = useState<string>(initial?.estatus ?? "borrador");
   const [done, setDone] = useState<{ id: string } | null>(null);
 
@@ -104,16 +106,19 @@ export default function RegistroForm({ initial }: { initial?: InitialData }) {
     setRegistro((s) => ({ ...s, [k]: v }));
     setErrors((e) => ({ ...e, [`registro.${k}`]: "" }));
     setSaved(false);
+    setDirty(true);
   };
   const setEmp = (k: keyof Empresa, v: string) => {
     if (bloqueado(k)) return;
     setEmpresa((s) => ({ ...s, [k]: v }));
     setErrors((e) => ({ ...e, [`empresa.${k}`]: "" }));
     setSaved(false);
+    setDirty(true);
   };
   const setDoc = (key: string, v: string) => {
     setDocumentos((s) => ({ ...s, [key]: v }));
     setSaved(false);
+    setDirty(true);
   };
 
   const docsEntregados = Object.values(documentos).filter((d) => d).length;
@@ -122,6 +127,7 @@ export default function RegistroForm({ initial }: { initial?: InitialData }) {
     // La firma se puede cambiar aunque el registro ya esté aprobado.
     setErrors((e) => ({ ...e, firma: "" }));
     setSaved(false);
+    setDirty(true);
     if (!file) {
       setFirma("");
       return;
@@ -191,6 +197,7 @@ export default function RegistroForm({ initial }: { initial?: InitialData }) {
           window.scrollTo({ top: 0, behavior: "smooth" });
         } else {
           setSaved(true);
+          setDirty(false);
           if (data?.estatus) setEstatus(data.estatus);
         }
         return;
@@ -656,42 +663,45 @@ export default function RegistroForm({ initial }: { initial?: InitialData }) {
         </p>
       )}
 
-      <div className="rg-actions">
-        <button
-          type="button"
-          className="btn btn--azul-outline btn--lg"
-          onClick={() => submit("guardar")}
-          disabled={submitting !== null}
-          aria-busy={submitting === "guardar"}
-        >
-          {submitting === "guardar" ? "Guardando…" : "Guardar avance"}
-        </button>
-        <button
-          type="button"
-          className="btn btn--rojo btn--lg"
-          onClick={() => submit("enviar")}
-          disabled={submitting !== null || !progress.complete}
-          aria-busy={submitting === "enviar"}
-          title={
-            progress.complete
-              ? undefined
-              : "Completa los campos obligatorios para enviar"
-          }
-        >
-          {submitting === "enviar" ? "Enviando…" : "Enviar registro"}
-        </button>
-        {saved ? (
-          <span className="rg-saved">
-            <Check width={16} height={16} /> Avance guardado
-          </span>
-        ) : (
-          !progress.complete && (
+      {/* La barra solo aparece si hay cambios sin guardar (o el aviso de guardado). */}
+      {dirty ? (
+        <div className="rg-actions">
+          <button
+            type="button"
+            className="btn btn--azul-outline btn--lg"
+            onClick={() => submit("guardar")}
+            disabled={submitting !== null}
+            aria-busy={submitting === "guardar"}
+          >
+            {submitting === "guardar" ? "Guardando…" : "Guardar avance"}
+          </button>
+          <button
+            type="button"
+            className="btn btn--rojo btn--lg"
+            onClick={() => submit("enviar")}
+            disabled={submitting !== null || !progress.complete}
+            aria-busy={submitting === "enviar"}
+            title={
+              progress.complete
+                ? undefined
+                : "Completa los campos obligatorios para enviar"
+            }
+          >
+            {submitting === "enviar" ? "Enviando…" : "Enviar registro"}
+          </button>
+          {!progress.complete && (
             <span className="rg-actions__hint">
               “Enviar” se activa al 100% ({progress.pct}%).
             </span>
-          )
-        )}
-      </div>
+          )}
+        </div>
+      ) : saved ? (
+        <div className="rg-actions">
+          <span className="rg-saved">
+            <Check width={16} height={16} /> Avance guardado
+          </span>
+        </div>
+      ) : null}
     </form>
   );
 }
