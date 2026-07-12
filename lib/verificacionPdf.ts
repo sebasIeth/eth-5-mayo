@@ -186,18 +186,19 @@ export async function buildVerificacionPdf(data: Data): Promise<Uint8Array> {
       const img = enc.firmaEmpresa.includes("image/png")
         ? await pdf.embedPng(imgBytes)
         : await pdf.embedJpg(imgBytes);
-      const s = Math.min(95 / img.width, 26 / img.height, 1);
+      // Blanco disponible: x~170 a ~265 (antes de "Firma Consultor" en x269).
+      const s = Math.min(85 / img.width, 24 / img.height, 1);
       p0.drawImage(img, {
-        x: 222,
+        x: 173,
         y: Y(586),
         width: img.width * s,
         height: img.height * s,
       });
     } catch {
-      put(p0, enc.ejecutivo, 225, 585, 8);
+      put(p0, enc.ejecutivo, 175, 585, 8);
     }
   } else {
-    put(p0, enc.ejecutivo, 225, 585, 8);
+    put(p0, enc.ejecutivo, 175, 585, 8);
   }
   put(p0, enc.evaluador, 382, 585, 8);
 
