@@ -125,6 +125,9 @@ export default async function ConsultorPage() {
               descarga el formato oficial.
             </p>
           </div>
+          <Link href="/consultor/usuarios" className="dash-btn dash-btn--rojo">
+            Gestionar usuarios
+          </Link>
         </div>
 
         {items.length === 0 ? (

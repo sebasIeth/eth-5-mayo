@@ -45,6 +45,7 @@ export async function GET(request: Request) {
     tipoEvaluacion?: TipoEvaluacion;
     tieneRestaurante?: boolean;
     porcentajeObtenido?: number;
+    estatus?: string;
   };
 
   const documentos = (doc.documentos ?? {}) as Record<string, string>;
@@ -59,6 +60,7 @@ export async function GET(request: Request) {
     respuestas: verif.respuestas ?? {},
     tipoEvaluacion: verif.tipoEvaluacion ?? "diagnostica",
     porcentajeObtenido: verif.porcentajeObtenido ?? null,
+    aprobada: verif.estatus === "completado",
     encabezado: {
       empresa: (doc.empresa?.razonSocial as string | undefined) ?? "",
       ejecutivo: (doc.empresa?.representante as string | undefined) ?? "",

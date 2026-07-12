@@ -2,6 +2,15 @@ import fs from "node:fs";
 import path from "node:path";
 import PizZip from "pizzip";
 import Docxtemplater from "docxtemplater";
+// Módulo de imágenes (MIT). Sin tipos propios → require + cast.
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const ImageModule = require("docxtemplater-image-module-free") as new (
+  opts: {
+    centered: boolean;
+    getImage: (tag: string) => Buffer;
+    getSize: () => [number, number];
+  },
+) => unknown;
 import {
   FAMILIAS,
   calcVerificacion,
@@ -15,6 +24,8 @@ import {
 } from "@/app/verificacion/aplicabilidad";
 
 const TEMPLATE = path.join(process.cwd(), "templates", "verificacion.docx");
+// Firma escaneada de la consultora (se coloca cuando la verificación se aprueba).
+const FIRMA_CONSULTOR = path.join(process.cwd(), "templates", "firma-consultor.png");
 
 // clave plana docxtemplater para un código "1.1" -> "1_1"
 const flat = (codigo: string) => codigo.replace(/\./g, "_");
@@ -53,6 +64,7 @@ type Data = {
   respuestas: RespuestasVerif;
   tipoEvaluacion: TipoEvaluacion;
   porcentajeObtenido: number | null;
+  aprobada: boolean; // verificación aprobada por el consultor → va su firma
   encabezado: {
     empresa: string;
     ejecutivo: string;
@@ -66,17 +78,31 @@ type Data = {
 export async function buildVerificacionDocx(data: Data): Promise<Buffer> {
   const content = fs.readFileSync(TEMPLATE, "binary");
   const zip = new PizZip(content);
+  const imageModule = new ImageModule({
+    centered: false,
+    getImage: () => fs.readFileSync(FIRMA_CONSULTOR),
+    getSize: () => [110, 74],
+  });
   const doc = new Docxtemplater(zip, {
     paragraphLoop: true,
     linebreaks: true,
     nullGetter: () => "",
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    modules: [imageModule as any],
   });
 
   const opts = { tieneRestaurante: data.tieneRestaurante };
   const { giro, respuestas } = data;
   const enc = data.encabezado;
 
-  const values: Record<string, string> = {};
+  const values: Record<string, string | boolean> = {};
+
+  // ---- Firma Consultor ----
+  // Solo cuando la verificación está aprobada va la firma escaneada. Antes de
+  // aprobar, la sección {#firmaConsultor} no se renderiza → línea en blanco
+  // (nunca el nombre).
+  values.firmaConsultor = data.aprobada && fs.existsSync(FIRMA_CONSULTOR);
+  values.firma_img = "firma"; // valor del tag imagen (getImage lee el archivo)
 
   // ---- Encabezado ----
   values.empresa = enc.empresa ?? "";

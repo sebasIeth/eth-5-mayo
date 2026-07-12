@@ -29,6 +29,15 @@ export function hashPassword(password: string): string {
   return `${salt}:${hash}`;
 }
 
+// Código de acceso aleatorio (sin caracteres ambiguos) que el consultor comparte.
+export function generateAccessCode(len = 8): string {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // sin O/0/I/1/l
+  const bytes = crypto.randomBytes(len);
+  let out = "";
+  for (let i = 0; i < len; i++) out += chars[bytes[i] % chars.length];
+  return out;
+}
+
 export function verifyPassword(password: string, stored: string): boolean {
   const [salt, hash] = stored.split(":");
   if (!salt || !hash) return false;
