@@ -38,7 +38,19 @@ const AZUL = "#003DA5";
 
 // URL pública de la plataforma (para los botones de los correos). Configúrala
 // en Vercel con el dominio del deploy, ej. https://sello.vercel.app
-const APP_URL = (process.env.APP_URL || "").replace(/\/$/, "");
+// Prioridad: APP_URL explícita → dominio de producción de Vercel → URL del
+// deploy de Vercel. Así en producción el botón apunta al sitio real aunque no
+// se configure APP_URL manualmente.
+function resolverAppUrl(): string {
+  const explicit = (process.env.APP_URL || "").trim();
+  if (explicit) return explicit.replace(/\/$/, "");
+  const prod = process.env.VERCEL_PROJECT_PRODUCTION_URL;
+  if (prod) return `https://${prod}`;
+  const vercel = process.env.VERCEL_URL;
+  if (vercel) return `https://${vercel}`;
+  return "";
+}
+const APP_URL = resolverAppUrl();
 const link = (path: string) => (APP_URL ? APP_URL + path : "");
 
 // Plantilla base reutilizable para los correos de notificación.
@@ -122,6 +134,22 @@ export function correoConfirmacionEnvio(
   };
 }
 
+// —— Al establecimiento: el consultor finalizó el servicio ——
+export function correoServicioFinalizado(nombre: string) {
+  return {
+    subject: "Servicio finalizado · Sello de Turismo de Salud",
+    html: layout({
+      titulo: "Tu servicio ha finalizado",
+      saludo: nombre ? `Hola ${nombre},` : "Hola,",
+      parrafos: [
+        "Tu consultor marcó como <strong>finalizado</strong> el servicio del Sello de Turismo de Salud. ¡Gracias por tu participación!",
+        "Puedes seguir descargando tus documentos desde la plataforma cuando lo necesites.",
+      ],
+      cta: { label: "Ver mi panel", href: link("/dashboard") },
+    }),
+  };
+}
+
 // —— Al establecimiento: el consultor terminó una revisión ——
 export function correoResultadoRevision(
   nombre: string,
@@ -162,6 +190,7 @@ export function correoAcceso(nombre: string, email: string, codigo: string, rege
   const intro = regenerado
     ? "Se generó un nuevo código de acceso para tu cuenta en la plataforma del Sello de Turismo de Salud. El código anterior ya no funciona."
     : "Se creó tu acceso a la plataforma del Sello de Turismo de Salud. Con estos datos puedes iniciar sesión.";
+  const loginHref = link("/login");
   const html = `
   <div style="font-family:Arial,Helvetica,sans-serif;max-width:520px;margin:0 auto;color:#1a2233">
     <div style="border-top:4px solid ${ROJO};border-radius:2px"></div>
@@ -174,7 +203,13 @@ export function correoAcceso(nombre: string, email: string, codigo: string, rege
       <p style="margin:0 0 6px;font-size:13px;color:#5a6472">Código de acceso</p>
       <p style="margin:0;font-size:22px;font-weight:bold;letter-spacing:2px;color:${ROJO}">${codigo}</p>
     </div>
-    <p style="font-size:14px;line-height:1.5;margin:0 0 6px">Inicia sesión en la plataforma con tu correo y este código.</p>
+    <p style="font-size:14px;line-height:1.5;margin:0 0 14px">Inicia sesión en la plataforma con tu correo y este código.</p>
+    ${
+      loginHref
+        ? `<a href="${loginHref}" style="display:inline-block;background:${ROJO};color:#fff;text-decoration:none;font-weight:bold;font-size:15px;padding:12px 22px;border-radius:10px;margin:0 0 6px">Iniciar sesión</a>
+    <p style="font-size:12px;color:#8a93a3;margin:8px 0 0;word-break:break-all">${loginHref}</p>`
+        : ""
+    }
     <p style="font-size:12px;color:#8a93a3;margin:22px 0 0">Segmentos Especializados · Secretaría de Turismo de México</p>
   </div>`;
   const subject = regenerado

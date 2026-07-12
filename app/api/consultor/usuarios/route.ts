@@ -76,7 +76,12 @@ export async function POST(request: Request) {
     return Response.json({ ok: false, error: "Cuerpo inválido." }, { status: 400 });
   }
 
-  const accion = body.accion === "regenerar" ? "regenerar" : "crear";
+  const accion =
+    body.accion === "regenerar"
+      ? "regenerar"
+      : body.accion === "enviar"
+        ? "enviar"
+        : "crear";
   const email = str(body.email).toLowerCase();
   const nombre = str(body.nombre);
 
@@ -99,6 +104,33 @@ export async function POST(request: Request) {
   const codigo = generateAccessCode();
 
   try {
+    if (accion === "enviar") {
+      // Reenvía el acceso con el código YA guardado (no lo regenera).
+      if (!existente) {
+        return Response.json(
+          { ok: false, error: "No existe un acceso con ese correo." },
+          { status: 404 },
+        );
+      }
+      const guardado = (existente.codigoAcceso as string) || "";
+      if (!guardado) {
+        return Response.json(
+          {
+            ok: false,
+            error: "Este acceso no tiene código guardado. Regenéralo para poder enviarlo.",
+          },
+          { status: 409 },
+        );
+      }
+      const nom = (existente.nombre as string) ?? "";
+      const c = correoAcceso(nom, email, guardado, false);
+      const enviado = await enviarCorreo({ to: email, subject: c.subject, html: c.html });
+      return Response.json(
+        { ok: enviado, email, nombre: nom, codigo: guardado, correoEnviado: enviado, ...(enviado ? {} : { error: "El correo no está activo o falló el envío." }) },
+        { status: enviado ? 200 : 502 },
+      );
+    }
+
     if (accion === "regenerar") {
       if (!existente) {
         return Response.json(
@@ -117,10 +149,9 @@ export async function POST(request: Request) {
         },
       );
       const nom = (existente.nombre as string) ?? "";
-      const c = correoAcceso(nom, email, codigo, true);
-      const enviado = await enviarCorreo({ to: email, subject: c.subject, html: c.html });
+      // No se envía automáticamente: el consultor lo manda con "Enviar al correo".
       return Response.json(
-        { ok: true, email, nombre: nom, codigo, correoEnviado: enviado },
+        { ok: true, email, nombre: nom, codigo, correoEnviado: false },
         { status: 200 },
       );
     }
@@ -140,8 +171,7 @@ export async function POST(request: Request) {
       creadoEn: new Date(),
       creadoPor: new ObjectId(user.id),
     });
-    const c = correoAcceso(nombre || "", email, codigo, false);
-    const enviado = await enviarCorreo({ to: email, subject: c.subject, html: c.html });
+    // No se envía automáticamente: el consultor lo manda con "Enviar al correo".
     return Response.json(
       {
         ok: true,
@@ -149,7 +179,7 @@ export async function POST(request: Request) {
         email,
         nombre: nombre || email,
         codigo,
-        correoEnviado: enviado,
+        correoEnviado: false,
       },
       { status: 201 },
     );

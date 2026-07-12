@@ -27,6 +27,7 @@ import DescargarDoc from "../../components/DescargarDoc";
 import RevisionForm from "./RevisionForm";
 import VerificacionRevisionForm from "./VerificacionRevisionForm";
 import DocBlock from "./DocBlock";
+import FinalizarServicio from "./FinalizarServicio";
 
 export const metadata: Metadata = {
   title: "Revisar registro · Sello de Turismo de Salud",
@@ -121,6 +122,25 @@ export default async function RevisarPage({
             </p>
           </div>
         </div>
+
+        <FinalizarServicio
+          registroId={id}
+          finalizado={doc.servicioFinalizado === true}
+          finalizadoEn={
+            doc.servicioFinalizadoEn
+              ? new Date(doc.servicioFinalizadoEn).toLocaleDateString("es-MX")
+              : undefined
+          }
+          blockchain={
+            doc.blockchain?.txHash
+              ? {
+                  txHash: doc.blockchain.txHash as string,
+                  url: doc.blockchain.url as string,
+                  contrato: doc.blockchain.contrato as string,
+                }
+              : null
+          }
+        />
 
         {/* ================= DOCUMENTO 1: Formato de Registro ================= */}
         <DocBlock

@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { PDFDocument, StandardFonts, rgb, type PDFFont } from "pdf-lib";
-import { partesFecha, type CartaAdhesion } from "@/app/cartas/data";
+import { partesFecha, type CartaAdhesion } from "@/app/documentos/data";
 
 const NAVY = rgb(0.098, 0.102, 0.18);
 const PAGE_H = 792;

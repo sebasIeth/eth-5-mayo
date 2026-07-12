@@ -155,8 +155,7 @@ export default function VerificacionForm({
   };
 
   const [subiendo, setSubiendo] = useState<Record<string, boolean>>({});
-  // "Pregúntale a Cynthia": sugerencia de IA por pregunta.
-  const [sugerencia, setSugerencia] = useState<Record<string, string>>({});
+  // "Pregúntale a Cynthia": genera el borrador de IA por pregunta.
   const [cynthiaLoad, setCynthiaLoad] = useState<Record<string, boolean>>({});
 
   async function preguntarCynthia(codigo: string) {
@@ -171,7 +170,16 @@ export default function VerificacionForm({
       });
       const data = await res.json().catch(() => null);
       if (res.ok && data?.sugerencia) {
-        setSugerencia((s) => ({ ...s, [codigo]: data.sugerencia }));
+        // Inserta el ejemplo DIRECTO en el cuadro para que la persona lo edite.
+        const actual = respuestas[codigo]?.obs?.trim() ?? "";
+        if (
+          !actual ||
+          window.confirm(
+            "Ya escribiste algo en este punto. ¿Reemplazarlo con el ejemplo de Cynthia?",
+          )
+        ) {
+          setObs(codigo, data.sugerencia);
+        }
       } else {
         setServerError(data?.error || "Cynthia no pudo responder ahora.");
       }
@@ -769,21 +777,14 @@ export default function VerificacionForm({
                         )}
                         <textarea
                           className="vf-obs"
-                          placeholder={
-                            sugerencia[p.codigo] ||
-                            "Evidencias de cumplimiento — describe cómo cumple y qué muestran las fotos (obligatorio)"
-                          }
+                          placeholder="Evidencias de cumplimiento — describe cómo cumple y qué muestran las fotos (obligatorio). Usa “✨ Pregúntale a Cynthia” para empezar con un ejemplo."
                           value={val?.obs ?? ""}
                           readOnly={locked}
                           onChange={(e) => setObs(p.codigo, e.target.value)}
-                          rows={
-                            sugerencia[p.codigo]
-                              ? Math.min(
-                                  9,
-                                  Math.max(3, Math.ceil(sugerencia[p.codigo].length / 60)),
-                                )
-                              : 2
-                          }
+                          rows={Math.min(
+                            12,
+                            Math.max(3, Math.ceil((val?.obs?.length ?? 0) / 60)),
+                          )}
                         />
 
                         <div className="vf-evid">

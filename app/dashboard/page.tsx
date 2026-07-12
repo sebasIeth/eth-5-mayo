@@ -48,6 +48,8 @@ type RegistroItem = {
   tieneRevision: boolean;
   correcciones: number;
   verif: VerifData;
+  servicioFinalizado: boolean;
+  blockchainUrl: string;
 };
 
 const VERIF_ESTATUS: Record<string, { label: string; cls: string }> = {
@@ -123,6 +125,8 @@ export default async function DashboardPage() {
         (rev) => rev.estado === "correccion",
       ).length,
       verif,
+      servicioFinalizado: r.servicioFinalizado === true,
+      blockchainUrl: (r.blockchain?.url as string) || "",
     };
   });
 
@@ -172,6 +176,23 @@ export default async function DashboardPage() {
                 VERIF_ESTATUS[r.verif.estatus] ?? VERIF_ESTATUS.borrador;
               return (
                 <li key={r.id} className="dash-group">
+                {r.servicioFinalizado && (
+                  <div className="dash-fin">
+                    ✓ Tu servicio del Sello de Turismo de Salud fue marcado como
+                    finalizado por tu consultor. Puedes seguir descargando tus
+                    documentos.
+                    {r.blockchainUrl && (
+                      <a
+                        className="dash-fin__chain"
+                        href={r.blockchainUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        ⛓️ Tu Sello quedó registrado en blockchain · ver en Etherscan ↗
+                      </a>
+                    )}
+                  </div>
+                )}
                 <div className="dash-item">
                   {r.firma && (
                     // eslint-disable-next-line @next/next/no-img-element
@@ -279,7 +300,7 @@ export default async function DashboardPage() {
                 {/* ===== Cartas del Sello (MSE-FO-29 / MSE-FO-32) ===== */}
                 <div className="dash-item">
                   <div className="dash-item__body">
-                    <h3>Cartas del Sello</h3>
+                    <h3>Documentos del Sello</h3>
                     <span className="dash-item__doc">
                       Carta de Intención · MSE-FO-29 · Carta de Adhesión · MSE-FO-32
                     </span>
@@ -290,8 +311,8 @@ export default async function DashboardPage() {
                   </div>
                   <div className="dash-item__side">
                     <div className="dash-item__actions">
-                      <Link href="/cartas" className="dash-btn dash-btn--rojo">
-                        Llenar cartas
+                      <Link href="/documentos" className="dash-btn dash-btn--rojo">
+                        Llenar documentos
                       </Link>
                     </div>
                   </div>

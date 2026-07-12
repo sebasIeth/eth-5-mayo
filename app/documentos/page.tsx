@@ -8,7 +8,7 @@ import PlatformUser from "../components/PlatformUser";
 import CartasForm from "./CartasForm";
 
 export const metadata: Metadata = {
-  title: "Cartas · Sello de Turismo de Salud",
+  title: "Documentos · Sello de Turismo de Salud",
 };
 
 export default async function CartasPage() {
@@ -56,7 +56,7 @@ export default async function CartasPage() {
         <div className="dash-head">
           <div>
             <span className="rg-eyebrow">Documentos</span>
-            <h1 className="dash-title">Cartas del Sello</h1>
+            <h1 className="dash-title">Documentos del Sello</h1>
             <p className="dash-sub">
               Llena la Carta de Intención (MSE-FO-29) y la Carta de Adhesión
               (MSE-FO-32). Se descargan en el formato oficial. Usan la firma de

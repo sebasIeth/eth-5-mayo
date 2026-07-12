@@ -35,14 +35,25 @@ export async function POST(request: Request) {
 
   const system =
     "Eres Cynthia, consultora del Sello de Turismo de Salud de la SECTUR de México. " +
-    "Ayudas a los establecimientos a redactar la 'Evidencia de Cumplimiento' de cada indicador " +
-    "de la Lista de Verificación (MSE-FO-55). Da un ejemplo breve y concreto, en español, de qué " +
-    "debe escribir el establecimiento para describir cómo cumple ese punto y qué evidencias adjunta. " +
-    "Máximo 2 o 3 oraciones, en primera persona del establecimiento, sin markdown ni listas.";
+    "Redactas por el establecimiento un BORRADOR COMPLETO y LISTO PARA EDITAR de la " +
+    "'Evidencia de Cumplimiento' de un indicador de la Lista de Verificación (MSE-FO-55). " +
+    "\n\nReglas:\n" +
+    "- Escribe en primera persona del establecimiento (nosotros/nuestro), en español.\n" +
+    "- Sé MUY DETALLADO y CONCRETO, no genérico. Nada de 'adjuntamos los links correspondientes'. " +
+    "Describe exactamente qué se hace, dónde y qué muestra cada evidencia.\n" +
+    "- Da un EJEMPLO REALISTA y verosímil, como quedaría ya lleno, para que la persona solo ajuste los datos.\n" +
+    "- Cuando se pidan enlaces (página web, redes, portales), ESCRIBE ejemplos de URL reales y plausibles, " +
+    "p.ej. https://www.tuestablecimiento.com/turismo-de-salud , https://www.instagram.com/tuestablecimiento , " +
+    "https://www.facebook.com/tuestablecimiento . Usa el formato correcto de URL.\n" +
+    "- Marca entre corchetes lo que la persona debe reemplazar, p.ej. [nombre del establecimiento], " +
+    "[tu ciudad], [tu URL]. Así sabe qué personalizar.\n" +
+    "- Menciona expresamente cada evidencia requerida (capturas, fotos, enlaces) y qué debe verse en ella.\n" +
+    "- Extensión: entre 4 y 7 oraciones, en 1 o 2 párrafos. Sin markdown, sin viñetas, sin títulos. Solo el texto redactado.";
   const userMsg =
     `Indicador ${pregunta.codigo}: ${pregunta.texto}\n\n` +
-    (criterios ? `Evidencias que debo presentar:\n${criterios}\n\n` : "") +
-    "¿Qué debo escribir en la descripción de cumplimiento de este punto?";
+    (criterios ? `Evidencias que se deben presentar para este punto:\n${criterios}\n\n` : "") +
+    "Redacta el borrador completo, detallado y con ejemplos concretos (incluyendo URLs de ejemplo " +
+    "cuando aplique) de la evidencia de cumplimiento de este punto, listo para que yo lo edite.";
 
   try {
     const res = await fetch(
@@ -52,8 +63,8 @@ export async function POST(request: Request) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           model,
-          max_tokens: 300,
-          temperature: 0.4,
+          max_tokens: 600,
+          temperature: 0.5,
           messages: [
             { role: "system", content: system },
             { role: "user", content: userMsg },
@@ -62,8 +73,16 @@ export async function POST(request: Request) {
       },
     );
     const data = await res.json().catch(() => null);
-    const texto: string =
-      data?.choices?.[0]?.message?.content?.trim?.() ?? "";
+    const raw: string = data?.choices?.[0]?.message?.content?.trim?.() ?? "";
+    // Limpia markdown que a veces cuela el modelo: enlaces [txt](url), negritas
+    // y viñetas, para dejar texto plano listo para el cuadro.
+    const texto = raw
+      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_m, a: string, b: string) =>
+        a.trim() === b.trim() ? b.trim() : `${a.trim()} (${b.trim()})`,
+      )
+      .replace(/\*\*(.*?)\*\*/g, "$1")
+      .replace(/^\s*[-*]\s+/gm, "")
+      .trim();
     if (!res.ok || !texto) {
       console.error("[cynthia] respuesta inválida:", res.status, data?.error);
       return Response.json(

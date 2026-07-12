@@ -50,7 +50,11 @@ export default function UsuariosManager({ initial }: { initial: Usuario[] }) {
     }
   }
 
-  async function enviar(accion: "crear" | "regenerar", correo: string, nom?: string) {
+  async function enviar(
+    accion: "crear" | "regenerar" | "enviar",
+    correo: string,
+    nom?: string,
+  ) {
     setBusy(true);
     setError(null);
     setCopiado(false);
@@ -157,24 +161,34 @@ export default function UsuariosManager({ initial }: { initial: Usuario[] }) {
               <span>Código de acceso</span>
               <code className="usr-code">{resultado.codigo}</code>
             </div>
-            <button
-              type="button"
-              className="dash-btn"
-              onClick={() => {
-                navigator.clipboard
-                  ?.writeText(
-                    `Correo: ${resultado.email}\nCódigo de acceso: ${resultado.codigo}`,
-                  )
-                  .then(() => setCopiado(true))
-                  .catch(() => {});
-              }}
-            >
-              {copiado ? "¡Copiado!" : "Copiar"}
-            </button>
+            <div className="usr-result__acciones">
+              <button
+                type="button"
+                className="dash-btn dash-btn--rojo"
+                disabled={busy}
+                onClick={() => enviar("enviar", resultado.email)}
+              >
+                {busy ? "Enviando…" : "Enviar al correo"}
+              </button>
+              <button
+                type="button"
+                className="dash-btn"
+                onClick={() => {
+                  navigator.clipboard
+                    ?.writeText(
+                      `Correo: ${resultado.email}\nCódigo de acceso: ${resultado.codigo}`,
+                    )
+                    .then(() => setCopiado(true))
+                    .catch(() => {});
+                }}
+              >
+                {copiado ? "¡Copiado!" : "Copiar"}
+              </button>
+            </div>
             <p className="usr-result__note">
               {resultado.correoEnviado
-                ? "✓ Se envió el código por correo automáticamente."
-                : "El correo automático no está activo: comparte estos datos manualmente."}{" "}
+                ? "✓ Se envió el código por correo."
+                : "Copia los datos o presiona “Enviar al correo” para mandárselos."}{" "}
               También puedes verlo después con el botón “Ver”.
             </p>
           </div>
@@ -250,6 +264,16 @@ export default function UsuariosManager({ initial }: { initial: Usuario[] }) {
                   </div>
                 ) : (
                   <div className="usr-item__acciones">
+                    {u.codigo && (
+                      <button
+                        type="button"
+                        className="dash-btn"
+                        disabled={busy}
+                        onClick={() => enviar("enviar", u.email)}
+                      >
+                        Enviar correo
+                      </button>
+                    )}
                     <button
                       type="button"
                       className="dash-btn"
