@@ -22,6 +22,8 @@ import {
 const NAVY = rgb(0.098, 0.102, 0.18);
 const PAGE_H = 792;
 const TEMPLATE = path.join(process.cwd(), "templates", "lista-verificacion.pdf");
+// Firma escaneada de la consultora (se coloca cuando la verificación se aprueba).
+const FIRMA_CONSULTOR = path.join(process.cwd(), "templates", "firma-consultor.png");
 
 // Coordenadas medidas con PyMuPDF (origen arriba-izquierda). Y() convierte al
 // sistema de pdf-lib (origen abajo-izquierda).
@@ -134,6 +136,7 @@ type Data = {
   respuestas: RespuestasVerif;
   tipoEvaluacion: TipoEvaluacion;
   porcentajeObtenido: number | null;
+  aprobada: boolean; // verificación aprobada por el consultor → va su firma
   encabezado: {
     empresa: string;
     ejecutivo: string;
@@ -200,7 +203,24 @@ export async function buildVerificacionPdf(data: Data): Promise<Uint8Array> {
   } else {
     put(p0, enc.ejecutivo, 175, 585, 8);
   }
-  put(p0, enc.evaluador, 405, 585, 8);
+  // Firma Consultor: si la verificación está aprobada, va su firma escaneada;
+  // si no, su nombre.
+  if (data.aprobada && fs.existsSync(FIRMA_CONSULTOR)) {
+    try {
+      const img = await pdf.embedPng(fs.readFileSync(FIRMA_CONSULTOR));
+      const s = Math.min(95 / img.width, 26 / img.height, 1);
+      p0.drawImage(img, {
+        x: 405,
+        y: Y(590),
+        width: img.width * s,
+        height: img.height * s,
+      });
+    } catch {
+      put(p0, enc.evaluador, 405, 585, 8);
+    }
+  } else {
+    put(p0, enc.evaluador, 405, 585, 8);
+  }
 
   // Cajas de porcentaje (centradas en su recuadro).
   const globalPct = calcVerificacion(respuestas, preguntasAplicables(giro, opts)).pct;
