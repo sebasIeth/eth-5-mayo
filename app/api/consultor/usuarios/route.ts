@@ -84,6 +84,7 @@ export async function POST(request: Request) {
         : "crear";
   const email = str(body.email).toLowerCase();
   const nombre = str(body.nombre);
+  const preregistroId = str(body.preregistroId);
 
   if (!email || !EMAIL_RE.test(email)) {
     return Response.json(
@@ -171,6 +172,20 @@ export async function POST(request: Request) {
       creadoEn: new Date(),
       creadoPor: new ObjectId(user.id),
     });
+    // Si vino de una solicitud de pre-registro, la marcamos como atendida.
+    if (preregistroId) {
+      try {
+        await db
+          .collection("preregistros")
+          .updateOne(
+            { _id: new ObjectId(preregistroId) },
+            { $set: { accesoCreado: true, accesoEn: new Date() } },
+          );
+      } catch {
+        /* id inválido: se ignora */
+      }
+    }
+
     // No se envía automáticamente: el consultor lo manda con "Enviar al correo".
     return Response.json(
       {

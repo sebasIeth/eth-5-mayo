@@ -31,6 +31,26 @@ export default async function UsuariosPage() {
       : "",
   }));
 
+  // Solicitudes de pre-registro (landing) que aún no tienen acceso creado.
+  const emailsConAcceso = new Set(docs.map((u) => (u.email as string) ?? ""));
+  const preDocs = await db
+    .collection("preregistros")
+    .find({ accesoCreado: { $ne: true } })
+    .sort({ creadoEn: -1 })
+    .toArray();
+  const preregistros = preDocs
+    .filter((p) => !emailsConAcceso.has((p.correo as string) ?? ""))
+    .map((p) => ({
+      id: p._id.toString(),
+      empresa: (p.empresa as string) ?? "",
+      nombre: (p.nombre as string) ?? "",
+      correo: (p.correo as string) ?? "",
+      telefono: (p.telefono as string) ?? "",
+      creadoEn: p.creadoEn
+        ? new Date(p.creadoEn).toLocaleDateString("es-MX")
+        : "",
+    }));
+
   return (
     <div className="rg-page">
       <header className="rg-top">
@@ -60,7 +80,7 @@ export default async function UsuariosPage() {
           </div>
         </div>
 
-        <UsuariosManager initial={usuarios} />
+        <UsuariosManager initial={usuarios} preregistros={preregistros} />
       </main>
 
       <footer className="rg-foot">

@@ -3053,7 +3053,8 @@ button:focus-visible {
   background: var(--white);
   box-shadow: var(--shadow-sm);
   margin-bottom: 26px;
-  overflow: hidden;
+  /* visible para que el menú "Descargar" no se recorte (sobre todo cerrado) */
+  overflow: visible;
 }
 .rev-doc__head {
   display: flex;
@@ -3064,6 +3065,12 @@ button:focus-visible {
   padding: 18px 24px;
   background: var(--hielo);
   border-bottom: 1px solid var(--border);
+  border-radius: 18px 18px 0 0;
+}
+/* Cerrado: el encabezado es toda la tarjeta -> esquinas completas, sin borde inferior */
+.rev-doc.is-closed .rev-doc__head {
+  border-radius: 18px;
+  border-bottom: none;
 }
 .rev-doc__toggle {
   display: flex;

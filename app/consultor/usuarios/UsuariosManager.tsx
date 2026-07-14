@@ -9,6 +9,14 @@ type Usuario = {
   codigo: string;
   creadoEn: string;
 };
+type Prerregistro = {
+  id: string;
+  empresa: string;
+  nombre: string;
+  correo: string;
+  telefono: string;
+  creadoEn: string;
+};
 type Resultado = {
   email: string;
   nombre: string;
@@ -16,8 +24,15 @@ type Resultado = {
   correoEnviado?: boolean;
 };
 
-export default function UsuariosManager({ initial }: { initial: Usuario[] }) {
+export default function UsuariosManager({
+  initial,
+  preregistros: preInicial = [],
+}: {
+  initial: Usuario[];
+  preregistros?: Prerregistro[];
+}) {
   const [usuarios, setUsuarios] = useState<Usuario[]>(initial);
+  const [preregistros, setPreregistros] = useState<Prerregistro[]>(preInicial);
   const [email, setEmail] = useState("");
   const [nombre, setNombre] = useState("");
   const [busy, setBusy] = useState(false);
@@ -43,6 +58,51 @@ export default function UsuariosManager({ initial }: { initial: Usuario[] }) {
       }
       setUsuarios((list) => list.filter((x) => x.id !== u.id));
       setConfirmar(null);
+    } catch {
+      setError("Sin conexión. Intenta de nuevo.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  // Crea el acceso desde una solicitud de pre-registro (un clic).
+  async function darAcceso(pre: Prerregistro) {
+    setBusy(true);
+    setError(null);
+    setCopiado(false);
+    try {
+      const res = await fetch("/api/consultor/usuarios", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          accion: "crear",
+          email: pre.correo,
+          nombre: pre.empresa || pre.nombre,
+          preregistroId: pre.id,
+        }),
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok || !data?.ok) {
+        setError(data?.error || "No se pudo crear el acceso.");
+        return;
+      }
+      setResultado({
+        email: data.email,
+        nombre: data.nombre,
+        codigo: data.codigo,
+        correoEnviado: data.correoEnviado,
+      });
+      setUsuarios((u) => [
+        {
+          id: data.id,
+          email: data.email,
+          nombre: data.nombre,
+          codigo: data.codigo,
+          creadoEn: "hoy",
+        },
+        ...u,
+      ]);
+      setPreregistros((list) => list.filter((x) => x.id !== pre.id));
     } catch {
       setError("Sin conexión. Intenta de nuevo.");
     } finally {
@@ -102,6 +162,46 @@ export default function UsuariosManager({ initial }: { initial: Usuario[] }) {
 
   return (
     <div className="usr">
+      {/* Solicitudes de pre-registro (landing) */}
+      {preregistros.length > 0 && (
+        <section className="rg-card">
+          <h2 className="rev-data__title">
+            Solicitudes de pre-registro ({preregistros.length})
+          </h2>
+          <p className="dash-sub">
+            Interesados que llenaron el formulario del sitio. Dales acceso con un
+            clic: se crea la cuenta y se genera su código.
+          </p>
+          <ul className="usr-list">
+            {preregistros.map((p) => (
+              <li key={p.id} className="usr-item">
+                <div>
+                  <strong>{p.empresa || p.nombre}</strong>
+                  <span className="usr-item__email">{p.correo}</span>
+                  <span className="usr-item__codigo">
+                    {p.nombre ? `${p.nombre} · ` : ""}
+                    {p.telefono ? `${p.telefono} · ` : ""}
+                    {p.creadoEn}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  className="dash-btn dash-btn--rojo"
+                  disabled={busy}
+                  onClick={() => darAcceso(p)}
+                >
+                  {busy ? "…" : "Dar acceso"}
+                </button>
+              </li>
+            ))}
+          </ul>
+          <p className="dash-sub" style={{ marginTop: "10px" }}>
+            Al dar acceso, el código aparece abajo en “Crear acceso” para copiarlo
+            o enviarlo por correo.
+          </p>
+        </section>
+      )}
+
       {/* Crear acceso */}
       <section className="rg-card">
         <h2 className="rev-data__title">Crear acceso</h2>
