@@ -39,6 +39,21 @@ export async function DELETE(request: Request) {
   if (!user || user.rol !== "consultor") {
     return Response.json({ ok: false, error: "No autorizado." }, { status: 403 });
   }
+
+  // ?pre=<id> → descarta una solicitud de pre-registro (no un acceso).
+  const preId = new URL(request.url).searchParams.get("pre");
+  if (preId) {
+    let _pre: ObjectId;
+    try {
+      _pre = new ObjectId(preId);
+    } catch {
+      return Response.json({ ok: false, error: "Id inválido." }, { status: 400 });
+    }
+    const db = await getDb();
+    await db.collection("preregistros").deleteOne({ _id: _pre });
+    return Response.json({ ok: true }, { status: 200 });
+  }
+
   const id = new URL(request.url).searchParams.get("id");
   let _id: ObjectId;
   try {

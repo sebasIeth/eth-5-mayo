@@ -66,6 +66,29 @@ export default function UsuariosManager({
     }
   }
 
+  // Descarta (borra) una solicitud de pre-registro.
+  async function borrarPre(pre: Prerregistro) {
+    if (!window.confirm(`¿Borrar la solicitud de "${pre.empresa || pre.correo}"?`)) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const res = await fetch(
+        `/api/consultor/usuarios?pre=${encodeURIComponent(pre.id)}`,
+        { method: "DELETE" },
+      );
+      const data = await res.json().catch(() => null);
+      if (!res.ok || !data?.ok) {
+        setError(data?.error || "No se pudo borrar.");
+        return;
+      }
+      setPreregistros((list) => list.filter((x) => x.id !== pre.id));
+    } catch {
+      setError("Sin conexión. Intenta de nuevo.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   // Crea el acceso desde una solicitud de pre-registro (un clic).
   async function darAcceso(pre: Prerregistro) {
     setBusy(true);
@@ -208,14 +231,26 @@ export default function UsuariosManager({
                     {p.creadoEn}
                   </span>
                 </div>
-                <button
-                  type="button"
-                  className="dash-btn dash-btn--rojo"
-                  disabled={busy}
-                  onClick={() => darAcceso(p)}
-                >
-                  {busy ? "…" : "Dar acceso"}
-                </button>
+                <div className="usr-item__acciones">
+                  <button
+                    type="button"
+                    className="dash-btn dash-btn--rojo"
+                    disabled={busy}
+                    onClick={() => darAcceso(p)}
+                  >
+                    {busy ? "…" : "Dar acceso"}
+                  </button>
+                  <button
+                    type="button"
+                    className="usr-x"
+                    disabled={busy}
+                    aria-label="Borrar solicitud"
+                    title="Borrar solicitud"
+                    onClick={() => borrarPre(p)}
+                  >
+                    ✕
+                  </button>
+                </div>
               </li>
             ))}
           </ul>
