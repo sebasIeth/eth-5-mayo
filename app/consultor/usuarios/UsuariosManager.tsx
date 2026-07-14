@@ -41,6 +41,7 @@ export default function UsuariosManager({
   const [copiado, setCopiado] = useState(false);
   const [confirmar, setConfirmar] = useState<string | null>(null);
   const [revelar, setRevelar] = useState<Record<string, boolean>>({});
+  const [preAbierto, setPreAbierto] = useState(false);
 
   async function eliminar(u: Usuario) {
     setBusy(true);
@@ -165,9 +166,32 @@ export default function UsuariosManager({
       {/* Solicitudes de pre-registro (landing) */}
       {preregistros.length > 0 && (
         <section className="rg-card">
-          <h2 className="rev-data__title">
-            Solicitudes de pre-registro ({preregistros.length})
-          </h2>
+          <button
+            type="button"
+            className="usr-collapse"
+            aria-expanded={preAbierto}
+            onClick={() => setPreAbierto((o) => !o)}
+          >
+            <svg
+              className={`usr-collapse__chev ${preAbierto ? "is-open" : ""}`}
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.4"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <path d="m9 18 6-6-6-6" />
+            </svg>
+            <span className="rev-data__title">
+              Solicitudes de pre-registro ({preregistros.length})
+            </span>
+          </button>
+          {preAbierto && (
+          <>
           <p className="dash-sub">
             Interesados que llenaron el formulario del sitio. Dales acceso con un
             clic: se crea la cuenta y se genera su código.
@@ -199,6 +223,8 @@ export default function UsuariosManager({
             Al dar acceso, el código aparece abajo en “Crear acceso” para copiarlo
             o enviarlo por correo.
           </p>
+          </>
+          )}
         </section>
       )}
 

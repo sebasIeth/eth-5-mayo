@@ -2709,6 +2709,25 @@ button:focus-visible {
   gap: 8px;
   flex-wrap: wrap;
 }
+.usr-collapse {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
+}
+.usr-collapse__chev {
+  flex: 0 0 auto;
+  color: var(--azul);
+  transition: transform 0.2s ease;
+}
+.usr-collapse__chev.is-open {
+  transform: rotate(90deg);
+}
 .usr-link {
   background: none;
   border: none;
