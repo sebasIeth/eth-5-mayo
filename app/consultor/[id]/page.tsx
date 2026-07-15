@@ -330,15 +330,15 @@ export default async function RevisarPage({
         {/* ============ Reporte general / Portafolio de Evidencias ========== */}
         <DocBlock code="Reporte" title="Portafolio de Evidencias">
           <p className="dash-sub">
-            Reporte general con la descripción y los anexos (fotos) que subió el
+            Presentación con la descripción y los anexos (fotos) que subió el
             establecimiento por cada indicador que cumple.
           </p>
-          <a
-            className="dash-btn dash-btn--rojo"
-            href={`/api/portafolio/pdf?id=${id}`}
-          >
-            Descargar PDF
-          </a>
+          <DescargarDoc
+            pdfUrl={`/api/portafolio/pptx?id=${id}`}
+            altUrl={`/api/portafolio/pdf?id=${id}`}
+            altLabel="PDF"
+            primaryLabel="PowerPoint"
+          />
         </DocBlock>
 
         {/* ============ Calculadora de Sello (MSE-FO-59) — solo consultor ===== */}

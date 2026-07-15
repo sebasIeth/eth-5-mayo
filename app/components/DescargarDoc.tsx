@@ -5,11 +5,17 @@ import { useEffect, useRef, useState } from "react";
 type Props = {
   pdfUrl: string;
   altUrl: string;
-  altLabel: string; // "Excel" | "Word"
+  altLabel: string; // "Excel" | "Word" | "PDF"
+  primaryLabel?: string; // etiqueta de la primera opción (default "PDF")
 };
 
 // Botón "Descargar ▾" con menú: PDF o el formato editable (Excel/Word).
-export default function DescargarDoc({ pdfUrl, altUrl, altLabel }: Props) {
+export default function DescargarDoc({
+  pdfUrl,
+  altUrl,
+  altLabel,
+  primaryLabel = "PDF",
+}: Props) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement | null>(null);
 
@@ -60,7 +66,7 @@ export default function DescargarDoc({ pdfUrl, altUrl, altLabel }: Props) {
             role="menuitem"
             onClick={() => setOpen(false)}
           >
-            PDF
+            {primaryLabel}
           </a>
           <a
             href={altUrl}

@@ -17,6 +17,7 @@ const nextConfig: NextConfig = {
     "/api/calculadora/xlsx": ["./templates/**"],
     "/api/consultor/finalizar": ["./contracts/**"],
     "/api/portafolio/pdf": ["./public/brand/**"],
+    "/api/portafolio/pptx": ["./public/brand/**"],
   },
 };
 
