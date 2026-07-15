@@ -16,6 +16,7 @@ const nextConfig: NextConfig = {
     "/api/carta-adhesion/pdf": ["./templates/**"],
     "/api/calculadora/xlsx": ["./templates/**"],
     "/api/consultor/finalizar": ["./contracts/**"],
+    "/api/portafolio/pdf": ["./public/brand/**"],
   },
 };
 
