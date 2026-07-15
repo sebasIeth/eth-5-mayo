@@ -107,11 +107,11 @@ export async function buildRegistroPdf(reg: Reg): Promise<Uint8Array> {
   put(r.giro, 143, 164);
   put(r.consultor, 195, 186, 8.5);
 
-  // Razón social: flota junto a su etiqueta; se ajusta para no invadir el
-  // campo "Nombre del Sello" (que empieza en x≈248).
-  putFit(e.razonSocial, 160, 240, 84, 9);
-  // "Nombre del Sello (RNT)" va SOBRE la línea (subrayado en x≈241, y≈240.2).
-  putFit(e.nombreSello, 248, 240, 300, 8.5);
+  // Razón social: en negrita, tamaño normal (flota junto a su etiqueta).
+  put(e.razonSocial, 160, 240, 9, bold);
+  // "Nombre del Sello (RNT)" corrido a la derecha para no chocar con la razón
+  // social; va sobre la línea (que abarca hasta el margen derecho).
+  putFit(e.nombreSello, 355, 240, 200, 8.5);
   put(e.representante, 164, 269);
   put(e.calleCP, 143, 292);
   put(e.municipio, 143, 322);
