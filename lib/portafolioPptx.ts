@@ -71,55 +71,60 @@ export async function buildPortafolioPptx(data: PortafolioData): Promise<Uint8Ar
     x: 0.5, y: 7.05, w: W - 1, h: 0.3, align: "center", fontSize: 9, color: GRIS,
   });
 
-  // ---------- Un slide por indicador ----------
+  // ---------- Por indicador: 1 slide para la descripción y slide(s) para anexos ----------
   for (const s of data.secciones) {
-    const slide = pptx.addSlide();
-    slide.background = { color: "FFFFFF" };
+    const titulo = `${s.codigo} ${s.tipo}  ·  ${s.texto}`;
 
-    // Título (código + tipo + pregunta)
-    slide.addText(`${s.codigo} ${s.tipo}  ·  ${s.texto}`, {
-      x: 0.5, y: 0.3, w: W - 1, h: 0.9, align: "left",
-      fontSize: 16, bold: true, color: ROJO, valign: "top",
-      fit: "shrink",
-    });
-
-    // Descripción
-    const hayImgs = s.imagenes.length > 0;
-    const descH = hayImgs ? 1.6 : H - 1.6;
+    // --- Slide de descripción (texto solo, sin imágenes que lo tapen) ---
     if (s.descripcion) {
+      const slide = pptx.addSlide();
+      slide.background = { color: "FFFFFF" };
+      slide.addText(titulo, {
+        x: 0.5, y: 0.35, w: W - 1, h: 0.9, align: "left",
+        fontSize: 18, bold: true, color: ROJO, valign: "top", fit: "shrink",
+      });
       slide.addText(s.descripcion, {
-        x: 0.5, y: 1.25, w: W - 1, h: descH, align: "left", valign: "top",
-        fontSize: 12, color: NAVY, fit: "shrink",
+        x: 0.6, y: 1.5, w: W - 1.2, h: H - 2, align: "left", valign: "top",
+        fontSize: 16, color: NAVY, fit: "shrink", lineSpacingMultiple: 1.1,
       });
     }
 
-    // Imágenes en grid adaptable
-    if (hayImgs) {
-      const n = s.imagenes.length;
-      const cols = columnas(n);
-      const rows = Math.ceil(n / cols);
-      const areaX = 0.5;
-      const areaY = 1.25 + descH + 0.15;
-      const areaW = W - 1;
-      const areaH = H - areaY - 0.3;
-      const gap = 0.15;
-      const cellW = (areaW - gap * (cols - 1)) / cols;
-      const cellH = (areaH - gap * (rows - 1)) / rows;
-      s.imagenes.forEach((img, i) => {
-        const r = Math.floor(i / cols);
-        const c = i % cols;
-        const x = areaX + c * (cellW + gap);
-        const y = areaY + r * (cellH + gap);
-        try {
-          slide.addImage({
-            data: imgData(img),
-            x, y, w: cellW, h: cellH,
-            sizing: { type: "contain", w: cellW, h: cellH },
-          });
-        } catch {
-          /* imagen inválida: se omite */
-        }
-      });
+    // --- Slide(s) de anexos: grid adaptable, máx 2 filas por slide ---
+    if (s.imagenes.length > 0) {
+      const cols = columnas(s.imagenes.length);
+      const perSlide = cols * 2; // hasta 2 filas por slide
+      for (let start = 0; start < s.imagenes.length; start += perSlide) {
+        const grupo = s.imagenes.slice(start, start + perSlide);
+        const rows = Math.ceil(grupo.length / cols);
+        const slide = pptx.addSlide();
+        slide.background = { color: "FFFFFF" };
+        slide.addText(titulo + " · anexos", {
+          x: 0.5, y: 0.3, w: W - 1, h: 0.7, align: "left",
+          fontSize: 14, bold: true, color: ROJO, valign: "top", fit: "shrink",
+        });
+        const areaX = 0.5;
+        const areaY = 1.15;
+        const areaW = W - 1;
+        const areaH = H - areaY - 0.3;
+        const gap = 0.2;
+        const cellW = (areaW - gap * (cols - 1)) / cols;
+        const cellH = (areaH - gap * (rows - 1)) / rows;
+        grupo.forEach((img, i) => {
+          const r = Math.floor(i / cols);
+          const c = i % cols;
+          const x = areaX + c * (cellW + gap);
+          const y = areaY + r * (cellH + gap);
+          try {
+            slide.addImage({
+              data: imgData(img),
+              x, y, w: cellW, h: cellH,
+              sizing: { type: "contain", w: cellW, h: cellH },
+            });
+          } catch {
+            /* imagen inválida: se omite */
+          }
+        });
+      }
     }
   }
 
