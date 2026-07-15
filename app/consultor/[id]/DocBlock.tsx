@@ -15,7 +15,7 @@ export default function DocBlock({
   title,
   actions,
   children,
-  defaultOpen = true,
+  defaultOpen = false,
 }: Props) {
   const [open, setOpen] = useState(defaultOpen);
   return (
