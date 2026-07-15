@@ -75,6 +75,22 @@ export async function buildRegistroPdf(reg: Reg): Promise<Uint8Array> {
     if (!t) return;
     page.drawText(t, { x, y: Y(yTop), size, font: f, color: NAVY });
   };
+  // Igual que put, pero reduce el tamaño si el texto no cabe en maxW, para que
+  // un nombre largo no invada el campo de al lado.
+  const putFit = (
+    text: string | null | undefined,
+    x: number,
+    yTop: number,
+    maxW: number,
+    size = 9,
+    f: PDFFont = font,
+  ) => {
+    const t = (text ?? "").toString().trim();
+    if (!t) return;
+    let s = size;
+    while (s > 6 && f.widthOfTextAtSize(t, s) > maxW) s -= 0.5;
+    put(t, x, yTop, s, f);
+  };
 
   const r = reg.registro ?? {};
   const e = reg.empresa ?? {};
@@ -91,10 +107,11 @@ export async function buildRegistroPdf(reg: Reg): Promise<Uint8Array> {
   put(r.giro, 143, 164);
   put(r.consultor, 195, 186, 8.5);
 
-  // Razón social: flota junto a su etiqueta (no sobre la línea).
-  put(e.razonSocial, 160, 240, 9);
+  // Razón social: flota junto a su etiqueta; se ajusta para no invadir el
+  // campo "Nombre del Sello" (que empieza en x≈248).
+  putFit(e.razonSocial, 160, 240, 84, 9);
   // "Nombre del Sello (RNT)" va SOBRE la línea (subrayado en x≈241, y≈240.2).
-  put(e.nombreSello, 248, 240, 8.5);
+  putFit(e.nombreSello, 248, 240, 300, 8.5);
   put(e.representante, 164, 269);
   put(e.calleCP, 143, 292);
   put(e.municipio, 143, 322);
